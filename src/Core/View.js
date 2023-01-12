@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import Camera from 'Renderer/Camera';
+import initializeWebXR from 'Renderer/WebXR';
 import MainLoop, { MAIN_LOOP_EVENTS, RENDERING_PAUSED } from 'Core/MainLoop';
 import Capabilities from 'Core/System/Capabilities';
 import { COLOR_LAYERS_ORDER_CHANGED } from 'Renderer/ColorLayersOrdering';
@@ -146,6 +147,8 @@ class View extends THREE.EventDispatcher {
      * configure the renderer (see {@link c3DEngine}.  If not present, a new &lt;canvas> will be created and
      * added to viewerDiv (mutually exclusive with mainLoop)
      * @param {boolean} [options.renderer.isWebGL2=true] - enable webgl 2.0 for THREE.js.
+     * @param {boolean|Object} [options.webXR=false] - enable webxr button to switch on VR visualization.
+     * @param {number} [options.webXR.scale=1.0] - apply webxr scale tranformation.
      * @param {?Scene} [options.scene3D] - [THREE.Scene](https://threejs.org/docs/#api/en/scenes/Scene) instance to use, otherwise a default one will be constructed
      * @param {?Color} options.diffuse - [THREE.Color](https://threejs.org/docs/?q=color#api/en/math/Color) Diffuse color terrain material.
      * This color is applied to terrain if there isn't color layer on terrain extent (by example on pole).
@@ -245,6 +248,10 @@ class View extends THREE.EventDispatcher {
 
         // push all viewer to keep source.cache
         viewers.push(this);
+
+        if (options.webXR) {
+            initializeWebXR(this, options.webXR);
+        }
     }
 
     /**
@@ -434,7 +441,7 @@ class View extends THREE.EventDispatcher {
     notifyChange(changeSource = undefined, needsRedraw = true) {
         if (changeSource) {
             this._changeSources.add(changeSource);
-            if ((changeSource.isTileMesh || changeSource.isCamera)) {
+            if (!this.mainLoop.gfxEngine.renderer.xr.isPresenting && (changeSource.isTileMesh || changeSource.isCamera)) {
                 this.#fullSizeDepthBuffer.needsUpdate = true;
             }
         }

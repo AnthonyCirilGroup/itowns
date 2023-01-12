@@ -113,7 +113,9 @@ class MainLoop extends EventDispatcher {
                 document.title += ' ⌛';
             }
 
-            requestAnimationFrame((timestamp) => { this.#step(view, timestamp); });
+            if (!this.gfxEngine.renderer.xr.isPresenting) {
+                requestAnimationFrame((timestamp) => { this.step(view, timestamp); });
+            }
         }
     }
 
@@ -163,7 +165,7 @@ class MainLoop extends EventDispatcher {
         }
     }
 
-    #step(view, timestamp) {
+    step(view, timestamp) {
         const dt = timestamp - this.#lastTimestamp;
         view._executeFrameRequestersRemovals();
 
