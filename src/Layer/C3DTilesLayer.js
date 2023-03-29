@@ -67,6 +67,7 @@ class C3DTilesLayer extends GeometryLayer {
         this.registeredExtensions = config.registeredExtensions || new C3DTExtensions();
 
         this.pntsMode = PNTS_MODE.COLOR;
+        this.classification =  config.classification;
 
 
         if (config.pntsMode) {
