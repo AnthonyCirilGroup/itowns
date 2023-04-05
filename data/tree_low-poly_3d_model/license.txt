@@ -1,0 +1,11 @@
+Model Information:
+* title:	Tree Low-poly 3D model
+* source:	https://sketchfab.com/3d-models/tree-low-poly-3d-model-4be8a62963e8491b9ea94bc7bae8c4d1
+* author:	Gunther (https://sketchfab.com/xisoka45)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Tree Low-poly 3D model" (https://sketchfab.com/3d-models/tree-low-poly-3d-model-4be8a62963e8491b9ea94bc7bae8c4d1) by Gunther (https://sketchfab.com/xisoka45) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

@@ -1,0 +1,203 @@
+<html>
+    <head>
+        <title>Itowns - Globe + Multipolygon Geojson</title>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" type="text/css" href="css/example.css">
+        <link rel="stylesheet" type="text/css" href="css/LoadingScreen.css">
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>
+    </head>
+    <body>
+        <div id="viewerDiv" class="viewer"></div>
+        <script src="js/GUI/GuiTools.js"></script>
+        <script src="../dist/itowns.js"></script>
+        <script src="../dist/debug.js"></script>
+        <script type="text/javascript">var THREE=itowns.THREE;</script>
+        <script src="https://unpkg.com/three@0.129.0/examples/js/loaders/GLTFLoader.js"></script>
+
+        <script type="text/javascript">
+            // Define initial camera position
+            var positionOnGlobe = { longitude: -0.57918, latitude: 44.837789, altitude: 3000 };
+            var placement = {
+                coord: new itowns.Coordinates('EPSG:4326', -0.57918, 44.837789),
+                range: 3000,
+                tilt: 45,
+            }
+            
+            // `viewerDiv` will contain iTowns' rendering area (`<canvas>`)
+            var viewerDiv = document.getElementById('viewerDiv');
+
+            // Instanciate iTowns GlobeView*
+            var view = new itowns.GlobeView(viewerDiv, placement);
+            var menuGlobe = new GuiTools('menuDiv', view);
+
+            var ambLight = new itowns.THREE.AmbientLight(0xffffff, 0.2);
+            view.scene.add( ambLight );
+
+            // Add one imagery layer to the scene
+            itowns.Fetcher.json('./layers/JSONLayers/Ortho.json').then(function _(config) {
+                config.source = new itowns.WMTSSource(config.source);
+                var layer = new itowns.ColorLayer('Ortho', config);
+                view.addLayer(layer).then(menuGlobe.addLayerGUI.bind(menuGlobe));
+            });
+    
+
+            /* Arbres */
+    const trunkRadius = 5;
+    const trunkHeight = 20;
+    const topHeight = 10;
+
+    function makeTree() {
+        const root = new THREE.Object3D();
+
+        // tronc
+        const geometry = new THREE.CylinderGeometry( trunkRadius, trunkRadius, trunkHeight, 32 );
+        const material = new THREE.MeshPhongMaterial( {color: 0x8B4513} );
+        const tronc = new THREE.Mesh( geometry, material );
+        tronc.rotateX(Math.PI / 2);
+        tronc.updateMatrix();
+        root.add(tronc);
+
+        // canopée
+        const geometryCanop = new THREE.SphereGeometry( topHeight, topHeight, 10 );
+        const materialCanop = new THREE.MeshPhongMaterial( { color: 0x00aa00 } );
+        const top = new THREE.Mesh( geometryCanop, materialCanop );
+        top.position.z = trunkHeight - (topHeight / 3);
+        top.updateMatrix();
+        root.add(top);
+
+  return root;
+}
+ 
+function makeRectangle() {
+    const root = new THREE.Object3D();
+
+    // poteau fake
+    const geometry = new THREE.CylinderGeometry( trunkRadius, trunkRadius, trunkHeight, 32 );
+    const material = new THREE.MeshPhongMaterial( {color: 0xff00ff} );
+    const tronc = new THREE.Mesh( geometry, material );
+    tronc.rotateX(Math.PI / 2);
+    tronc.updateMatrix();
+    root.add(tronc);
+
+    return root;
+}
+
+
+// Load a gltf model
+    // Instantiate a loader
+    const loader = new THREE.GLTFLoader();
+
+// Load a glTF resource
+
+loader.load(
+    // resource URL
+    // 'http://localhost:8080/data/lampadaire/scene.gltf',
+    // 'http://localhost:8080/data/giant_low_poly_tree/scene.gltf',
+     'http://localhost:8080/data/tree_low-poly_3d_model/scene.gltf',
+    // called when the resource is loaded
+    (gltf) => {
+
+        console.log(gltf.scene);  
+        gltf.scene.rotateY(Math.PI );
+  
+        gltf.scene.updateMatrix();
+        
+        
+    var styleModel3D = new itowns.Style({
+             //  model: { object:  gltf.scene  }
+             model : { object : makeTree() }
+    });
+
+
+
+    var arbreSource = new itowns.FileSource({
+        url: './layers/JSONLayers/trees.geojson',
+        crs: 'EPSG:4326',
+        fetcher: itowns.Fetcher.json,
+        parser: itowns.GeoJsonParser.parse,
+    });
+
+    var arbreLayer = new itowns.FeatureGeometryLayer('arbre', {
+        name: 'arbre',
+        source: arbreSource,
+        zoom: { min: 7, max : 21},
+        style:  styleModel3D
+    });
+
+    view.addLayer(arbreLayer);
+
+
+    },
+    // called while loading is progressing
+    (xhr) => {
+        console.log(`${xhr.loaded / xhr.total * 100}% loaded`);
+    },
+    // called when loading has errors
+    (error) => {
+        console.log('An error happened :');
+        console.log(error);
+    },
+); 
+
+
+
+// Electriques
+
+loader.load(
+    // resource URL
+    // 'http://localhost:8080/data/lampadaire/scene.gltf',
+    //  'http://localhost:8080/data/giant_low_poly_tree/scene.gltf',
+    'http://localhost:8080/data/tree_low-poly_3d_model/scene.gltf',
+    // called when the resource is loaded
+    (gltf) => {
+        // styleModel3D.model.object = gltf.scene; 
+        //view.scene.add(gltf.scene);
+        //mergeAll(gltf.scene);
+        console.log(gltf.scene);  
+        gltf.scene.children[0].rotateZ(Math.PI);
+        gltf.scene.children[0].scale.set(0.02, 0.02, 0.02);
+  
+        gltf.scene.updateMatrix();
+        gltf.scene.updateMatrixWorld();
+        
+        
+    var styleModel3D = new itowns.Style({
+            model: { object:  gltf.scene }
+            // model : { object : makeRectangle()}
+    });
+
+    var lightSource = new itowns.FileSource({
+        url: './layers/JSONLayers/point lumineux bordeaux 2019.geojson',
+        crs: 'EPSG:4326',
+        fetcher: itowns.Fetcher.json,
+        parser: itowns.GeoJsonParser.parse,
+    });
+
+    var lightLayer = new itowns.FeatureGeometryLayer('luminaire', {
+        name: 'luminaire',
+        source: lightSource,
+        zoom: { min: 7, max : 21},
+        style:  styleModel3D
+    });
+
+    view.addLayer(lightLayer);
+
+
+    },
+    // called while loading is progressing
+    (xhr) => {
+        console.log(`${xhr.loaded / xhr.total * 100}% loaded`);
+    },
+    // called when loading has errors
+    (error) => {
+        console.log('An error happened :');
+        console.log(error);
+    },
+); 
+        
+        </script>
+    </body>
+
+</html>

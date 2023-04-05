@@ -12,3 +12,4 @@ potree
 coverage
 .nyc_output/
 /src/ThreeExtended/
+src/Converter/Feature2Mesh copy.js

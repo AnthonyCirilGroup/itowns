@@ -67,6 +67,10 @@ class PlanarView extends View {
         }
 
         this.tileLayer = tileLayer;
+
+        this.controls.minDistance = -50;
+        this.controls.handleCollision = false;
+        // view.mainLoop.gfxEngine.renderer.setClearColor();
     }
 
     addLayer(layer) {

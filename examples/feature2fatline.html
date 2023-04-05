@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Globe</title>
+        <link rel="stylesheet" type="text/css" href="css/example.css">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>
+    </head>
+    <body>
+        <div id="viewerDiv" class="viewer"></div>
+        <script src="js/GUI/GuiTools.js"></script>
+        <script src="js/GUI/LoadingScreen.js"></script>
+        <script src="../dist/itowns.js"></script>
+        <script src="../dist/debug.js"></script>
+        
+        <script type="text/javascript">
+
+            /***********************
+             * Generic scene setup 
+            ************************/ 
+            var THREE=itowns.THREE;
+            
+            // Define crs projection that we will use (taken from https://epsg.io/3946, Proj4js section)
+            itowns.proj4.defs('EPSG:3946', '+proj=lcc +lat_1=45.25 +lat_2=46.75 +lat_0=46 +lon_0=3 +x_0=1700000 +y_0=5200000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
+            // # Simple Globe viewer
+
+            // Define initial camera position
+            var positionOnGlobe = { longitude: 4.8901709, latitude: 45.771944, altitude: 3000 };
+            var placement = {
+                coord: new itowns.Coordinates('EPSG:4326', 4.8901709, 45.771944),
+                range: 3000,
+                tilt: 45,
+            };
+
+            // `viewerDiv` will contain iTowns' rendering area (`<canvas>`)
+            var viewerDiv = document.getElementById('viewerDiv');
+
+            // Instanciate iTowns GlobeView*
+            var view = new itowns.GlobeView(viewerDiv, placement);
+            setupLoadingScreen(viewerDiv, view);
+
+            // Add one imagery layer to the scene
+            // This layer is defined in a json file but it could be defined as a plain js
+            // object. See Layer* for more info.
+            itowns.Fetcher.json('./layers/JSONLayers/Ortho.json').then((config) => {
+                config.source = new itowns.WMTSSource(config.source);
+                var layer = new itowns.ColorLayer('Ortho', config);
+                view.addLayer(layer).then(menuGlobe.addLayerGUI.bind(menuGlobe));
+            });
+
+            // Add two elevation layers.
+            // These will deform iTowns globe geometry to represent terrain elevation.
+            function addElevationLayerFromConfig(config) {
+                config.source = new itowns.WMTSSource(config.source);
+                var layer = new itowns.ElevationLayer(config.id, config);
+                view.addLayer(layer).then(menuGlobe.addLayerGUI.bind(menuGlobe));
+            }
+            itowns.Fetcher.json('./layers/JSONLayers/WORLD_DTM.json').then(addElevationLayerFromConfig);
+            itowns.Fetcher.json('./layers/JSONLayers/IGN_MNT_HIGHRES.json').then(addElevationLayerFromConfig);
+
+            /***********************
+             * Add bus lines to scene 
+            ************************/ 
+
+            // var color = new itowns.THREE.Color();
+            // var tile;
+            // function altitudeLine(properties, contour) {
+            //     var result;
+            //     var z = 0;
+            //     if (contour) {
+            //         result = itowns.DEMUtils.getTerrainObjectAt(view.tileLayer, contour, 0, tile);
+            //         if (!result) {
+            //             result = itowns.DEMUtils.getTerrainObjectAt(view.tileLayer, contour, 0);
+            //         }
+            //         tile = [result.tile];
+            //         if (result) {
+            //             z = result.coord.z;
+            //         }
+            //         return z + 5;
+            //     }
+            // }
+
+            // function colorLine(properties) {
+            //     return color.set(Math.round(Math.random() * 0xffffff));
+            // }
+
+            // function acceptFeatureBus(properties) {
+            //     if (properties.sens == 'Aller') {
+            //         var line = properties.ligne;
+            //         if (linesBus.indexOf(line) === -1) {
+            //             linesBus.push(line);
+            //             return true;
+            //         }
+            //     }
+            //     return false;
+            // }
+
+            // var lyonTclBusSource = new itowns.WFSSource({
+            //     protocol: 'wfs',
+            //     url: 'https://download.data.grandlyon.com/wfs/rdata?',
+            //     version: '2.0.0',
+            //     typeName: 'tcl_sytral.tcllignebus',
+            //     crs: 'EPSG:3946',
+            //     extent: {
+            //         west: 1822174.60,
+            //         east: 1868247.07,
+            //         south: 5138876.75,
+            //         north: 5205890.19,
+            //     },
+            //     format: 'geojson',
+            // });
+
+            // var lyonTclBusLayer = new itowns.FeatureGeometryLayer('WFS Bus lines', {
+            //     name: 'lyon_tcl_bus',
+            //     filter: acceptFeatureBus,
+            //     source: lyonTclBusSource,
+            //     zoom: { min: 9 },
+
+            //     style: new itowns.Style({
+            //         stroke: {
+            //             color: colorLine,
+            //             base_altitude: altitudeLine,
+            //             width: 5,
+            //         },
+            //     }),
+            // });
+            // view.addLayer(lyonTclBusLayer);
+
+            /***********************
+             * Add mesh to scene 
+            ************************/ 
+
+            // function addMeshToScene() {
+            //     // creation of the new mesh (a cylinder)
+            //     var geometry = new THREE.CylinderGeometry(0, 10, 60, 8);
+            //     var material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            //     var mesh = new THREE.Mesh(geometry, material);
+
+            //     // get the position on the globe, from the camera
+            //     var cameraTargetPosition = view.controls.getLookAtCoordinate();
+
+            //     // position of the mesh
+            //     var meshCoord = cameraTargetPosition;
+            //     meshCoord.altitude += 30;
+
+            //     // position and orientation of the mesh
+            //     mesh.position.copy(meshCoord.as(view.referenceCrs));
+            //     mesh.lookAt(new THREE.Vector3(0, 0, 0));
+            //     mesh.rotateX(Math.PI / 2);
+
+            //     // update coordinate of the mesh
+            //     mesh.updateMatrixWorld();
+
+            //     // add the mesh to the scene
+            //     view.scene.add(mesh);
+
+            //     // make the object usable from outside of the function
+            //     view.mesh = mesh;
+            //     view.notifyChange();
+            // }
+
+            // // Listen for globe full initialisation event
+            // view.addEventListener(itowns.GLOBE_VIEW_EVENTS.GLOBE_INITIALIZED, function globeInitialized() {
+            //     // eslint-disable-next-line no-console
+            //     console.info('Globe initialized');
+            //     addMeshToScene();
+            // });
+
+            /***********************
+             * Fat lines
+            ************************/ 
+            // console.log(view.controls.getLookAtCoordinate().as(view.referenceCrs));
+            view.addSimpleFatLine();
+
+            // var positions = [];
+            // var colors = [];
+
+            // var points = hilbert3D( new THREE.Vector3( 0, 0, 0 ), 20.0, 1, 0, 1, 2, 3, 4, 5, 6, 7 );
+
+            // var spline = new THREE.CatmullRomCurve3( points );
+            // var divisions = Math.round( 12 * points.length );
+            // var point = new THREE.Vector3();
+            // var color = new THREE.Color();
+
+            // var cameraTargetPosition = view.controls.getLookAtCoordinate();
+            // for ( var i = 0, l = divisions; i < l; i ++ ) {
+
+            //     var t = i / l;
+
+            //     spline.getPoint( t, point );
+            //     point.addVectors(point, cameraTargetPosition);
+            //     positions.push( point.x, point.y, point.z );
+
+            //     color.setHSL( t, 1.0, 0.5 );
+            //     colors.push( color.r, color.g, color.b );
+
+            // }
+
+            // var geometry = new LineGeometry();
+            // geometry.setPositions( positions );
+            // geometry.setColors( colors );
+
+            // matLine = new LineMaterial( {
+            //     color: 0xffffff,
+            //     linewidth: 5, // in world units with size attenuation, pixels otherwise
+            //     vertexColors: true,
+
+            //     //resolution:  // to be set by renderer, eventually
+            //     dashed: false,
+            //     alphaToCoverage: true,
+            // } );
+
+            // line = new Line2( geometry, matLine );
+            // line.computeLineDistances();
+            // line.scale.set( 1, 1, 1 );
+            // view.scene.add( line );
+
+
+            /***********************
+             * Scene debug menu
+            ************************/ 
+
+            var menuGlobe = new GuiTools('menuDiv', view);
+            // Listen for globe full initialisation event
+            view.addEventListener(itowns.GLOBE_VIEW_EVENTS.GLOBE_INITIALIZED, () => {
+                // eslint-disable-next-line no-console
+                console.info('Globe initialized');
+            });
+
+            debug.createTileDebugUI(menuGlobe.gui, view);
+
+        </script>
+    </body>
+</html>

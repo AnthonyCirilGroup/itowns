@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Globe</title>
+        <link rel="stylesheet" type="text/css" href="examples/css/example.css">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>
+    </head>
+    <body>
+        <div id="viewerDiv" class="viewer"></div>
+        <script src="examples/js/GUI/GuiTools.js"></script>
+        <script src="examples/js/GUI/LoadingScreen.js"></script>
+        <script src="./dist/itowns.js"></script>
+        <script src="./dist/debug.js"></script>
+        <script> var THREE=itowns.THREE; </script>        
+        <script src="https://unpkg.com/three@0.129.0/examples/js/loaders/GLTFLoader.js"></script>
+        <script>
+
+            var linesBus = [];
+
+            Math.Clamp = function clamp(n, min, max) {
+                if(n > max){
+                    return max;
+                } else if(n < min){
+                    return min
+                } else{
+                    return n;
+                }
+                }
+            
+            // Define crs projection that we will use (taken from https://epsg.io/3946, Proj4js section)
+            itowns.proj4.defs('EPSG:3946', '+proj=lcc +lat_1=45.25 +lat_2=46.75 +lat_0=46 +lon_0=3 +x_0=1700000 +y_0=5200000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
+            itowns.proj4.defs("EPSG:2154","+proj=lcc +lat_1=49 +lat_2=44 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
+
+            var viewerDiv = document.getElementById('viewerDiv');
+            var placement = {
+                coord: new itowns.Coordinates('EPSG:4326',2.475700,49.262204),
+                range: 3000,
+                tilt: 45,
+            };
+
+            var view = new itowns.GlobeView(viewerDiv, placement);
+
+            var orthoSource = new itowns.WMTSSource({
+                url: 'https://wxs.ign.fr/3ht7xcw6f7nciopo16etuqp2/geoportail/wmts',
+                crs: "EPSG:3857",
+                name: 'ORTHOIMAGERY.ORTHOPHOTOS',
+                tileMatrixSet: 'PM',
+                format: 'image/jpeg',
+            })
+
+            var orthoLayer = new itowns.ColorLayer('Ortho', {
+                source: orthoSource,
+            });
+
+            view.addLayer(orthoLayer);
+
+            var elevationSource = new itowns.WMTSSource({
+                url: 'https://wxs.ign.fr/3ht7xcw6f7nciopo16etuqp2/geoportail/wmts',
+                crs: 'EPSG:4326',
+                name: 'ELEVATION.ELEVATIONGRIDCOVERAGE.SRTM3',
+                tileMatrixSet: 'WGS84G',
+                format: 'image/x-bil;bits=32',
+                zoom: {min: 3, max: 10},
+            });
+
+            var elevationLayer = new itowns.ElevationLayer('MNT_WORLD', {
+                source: elevationSource,
+            });
+
+            // view.addLayer(elevationLayer);
+            
+            var canalisationsSource = new itowns.FileSource({
+                url: './Canalisations.json',
+                crs: 'EPSG:2154',
+                fetcher: itowns.Fetcher.json,
+                parser: itowns.GeoJsonParser.parse,
+            });
+
+            var color = new itowns.THREE.Color();
+
+            function getRandomInt(min, max) {
+                min = Math.ceil(min);
+                max = Math.floor(max);
+                return Math.floor(Math.random() * (max - min)) + min;
+            }
+            function colorLine(properties) {
+
+                // console.log(properties);
+                let alea = getRandomInt(1,3);
+                // console.log(alea);
+
+                switch (alea) {
+                    case 1:
+                        return color.set(0xF5B041);
+                        break;
+
+                        case 2:
+                        return color.set(0xF48FB1);
+                        break;
+
+                        case 3:
+                        return color.set(0x1565C0);
+                        break;
+
+                
+                    default:
+                        return color.set( 0xffffff);
+                        break;
+                }
+
+       
+                switch (properties.BG_TYPE) {
+                    case "TYPE_RESEAU_EU_01":
+                        return color.set(0xF5B041);
+                        break;
+
+                        case "TYPE_RESEAU_EU_02":
+                        return color.set(0xF48FB1);
+                        break;
+
+                        case "TYPE_RESEAU_EU_03":
+                        return color.set(0x1565C0);
+                        break;
+
+                        case "TYPE_RESEAU_EU_04":
+                        return color.set(0xffffff);
+                        break;
+                
+                    default:
+                        return color.set(Math.round(Math.random() * 0xffffff));
+                        break;
+                }
+                           
+            }
+    
+
+            var canalisationsLayer = new itowns.FeatureGeometryLayer('Canalisations', {
+                name: 'canalisations',
+                source: canalisationsSource,
+                zoom: { min: 9 },
+
+                style: new itowns.Style({
+                    stroke: {
+                        color : colorLine, // color.set(0x0000aa),
+                        base_altitude: -20,
+                        width: 10,
+                    },
+                }),
+            });
+
+    
+            view.addLayer(canalisationsLayer);
+
+
+            var rte = new itowns.FileSource({
+                url: './electricite.geojson',
+                crs: 'EPSG:2154',
+                fetcher: itowns.Fetcher.json,
+                parser: itowns.GeoJsonParser.parse,
+            });
+
+            var rteLayer = new itowns.FeatureGeometryLayer('RTE', {
+                name: 'rteLayer',
+                source: rte,
+                zoom: { min: 9 },
+
+                style: new itowns.Style({
+                    stroke: {
+                        color : color.set(0xaa00aa),
+                        base_altitude: -20,
+                        width: 10,
+                    },
+                }),
+            });
+
+            view.addLayer(rteLayer);
+
+
+
+
+
+
+
+         //   Load a gltf model
+    // Instantiate a loader
+    /*
+const loader = new THREE.GLTFLoader();
+
+// Load a glTF resource
+
+loader.load(
+    // resource URL
+    'http://localhost:8080/obj/tram/scene.gltf',
+    // called when the resource is loaded
+    (gltf) => {
+        // styleModel3D.model.object = gltf.scene; 
+        view.scene.add(gltf.scene);
+        
+        //mergeAll(gltf.scene);
+        console.log(gltf);      
+        view.notifyChange();  
+    },
+    // called while loading is progressing
+    (xhr) => {
+        console.log(`${xhr.loaded / xhr.total * 100}% loaded`);
+    },
+    // called when loading has errors
+    (error) => {
+        console.log('An error happened :');
+        console.log(error);
+    },
+); 
+
+*/
+/*
+view.addLayer(vehicule).then(function menu(layer) {
+    var gui = debug.GeometryDebug.createGeometryDebugUI(menuGlobe.gui, view, layer);
+});
+*/
+
+
+
+            var menuGlobe = new GuiTools('menuDiv', view);
+            // Listen for globe full initialisation event
+            view.addEventListener(itowns.GLOBE_VIEW_EVENTS.GLOBE_INITIALIZED, () => {
+                // eslint-disable-next-line no-console
+                console.info('Globe initialized');
+            });
+
+            debug.createTileDebugUI(menuGlobe.gui, view);
+
+        </script>
+    </body>
+</html>

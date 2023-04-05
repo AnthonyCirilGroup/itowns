@@ -139,6 +139,8 @@ function defineStyleProperty(style, category, name, value, defaultValue) {
  * - `stroke` is for all lines and polygons edges
  * - `point` is for all points
  * - `text` contains all {@link Label} related things
+ * - `model` is for point to 3D Model
+ * - `light` is for point to light
  *
  * Many style property can be set to functions. When that is the case, the function's
  * return type must necessarily be the same as the types (other than function) of the property.
@@ -305,6 +307,8 @@ class Style {
             point: {},
             text: {},
             icon: {},
+            model: {},
+            light: {},
         };
 
         params.zoom = params.zoom || {};
@@ -313,6 +317,8 @@ class Style {
         params.point = params.point || {};
         params.text = params.text || {};
         params.icon = params.icon || {};
+        params.model = params.model || {};
+        params.light = params.light || {};
 
         this.zoom = {};
         defineStyleProperty(this, 'zoom', 'min', params.zoom.min);
@@ -345,6 +351,12 @@ class Style {
         defineStyleProperty(this, 'point', 'radius', params.point.radius, 2.0);
         defineStyleProperty(this, 'point', 'width', params.point.width, 0.0);
         defineStyleProperty(this, 'point', 'base_altitude', params.point.base_altitude, base_altitudeDefault);
+
+        this.model = {};
+        defineStyleProperty(this, 'model', 'object', params.model.object);
+
+        this.light = {};
+        defineStyleProperty(this, 'light', 'object', params.light.object);
 
         this.text = {};
         defineStyleProperty(this, 'text', 'field', params.text.field);
@@ -391,6 +403,12 @@ class Style {
         if (this.point.color || context.globals.point) {
             mapPropertiesFromContext('point', this, style, context);
         }
+        if (this.model.object || context.globals.model) {
+            mapPropertiesFromContext('model', this, style, context);
+        }
+        if (this.light.object || context.globals.light) {
+            mapPropertiesFromContext('light', this, style, context);
+        }
         if (Object.keys(style).length) {
             return style;
         }
@@ -426,6 +444,8 @@ class Style {
         Object.assign(this.point, style.point);
         Object.assign(this.text, style.text);
         Object.assign(this.icon, style.icon);
+        Object.assign(this.model, style.model);
+        Object.assign(this.light, style.light);
         return this;
     }
 
@@ -726,5 +746,8 @@ style_properties.stroke = Object.keys(style.stroke);
 style_properties.point = Object.keys(style.point);
 style_properties.text = Object.keys(style.text);
 style_properties.icon = Object.keys(style.icon);
+style_properties.model = Object.keys(style.model);
+style_properties.light = Object.keys(style.light);
+
 
 export default Style;

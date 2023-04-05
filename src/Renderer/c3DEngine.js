@@ -7,7 +7,7 @@
 import * as THREE from 'three';
 import Capabilities from 'Core/System/Capabilities';
 import { unpack1K } from 'Renderer/LayeredMaterial';
-import WEBGL from 'ThreeExtended/capabilities/WebGL';
+// import WEBGL from 'ThreeExtended/capabilities/WebGL';
 import Label2DRenderer from 'Renderer/Label2DRenderer';
 
 const depthRGBA = new THREE.Vector4();
@@ -93,6 +93,7 @@ class c3DEngine {
             this.renderer = null;
         }
 
+        /*
         if (!this.renderer) {
             if (!WEBGL.isWebGLAvailable()) {
                 viewerDiv.appendChild(WEBGL.getErrorMessage(1));
@@ -102,6 +103,7 @@ class c3DEngine {
 
             throw new Error('WebGL unsupported');
         }
+        */
 
         if (!renderer && options.logarithmicDepthBuffer) {
             // We don't support logarithmicDepthBuffer when EXT_frag_depth is missing.

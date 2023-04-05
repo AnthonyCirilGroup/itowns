@@ -127,10 +127,16 @@ class GlobeView extends View {
             this.controls.handleCollision = typeof (options.handleCollision) !== 'undefined' ? options.handleCollision : true;
         }
 
-        this.addLayer(new Atmosphere('atmosphere', options.atmosphere));
+        var atmosphereLayer = new Atmosphere('atmosphere', options.atmosphere);
+        this.atmosphereLayer = atmosphereLayer;
+        this.addLayer(atmosphereLayer);
 
         // GlobeView needs this.camera.resize to set perpsective matrix camera
         this.camera.resize(viewerDiv.clientWidth, viewerDiv.clientHeight);
+
+        this.controls.minDistance = -50;
+        this.controls.handleCollision = false;
+        // view.mainLoop.gfxEngine.renderer.setClearColor();
     }
 
     /**

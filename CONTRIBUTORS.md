@@ -29,7 +29,7 @@ The following people have contributed to iTowns.
   * [Nicolas Saul](https://github.com/NikoSaul)
   * [Emmanuel Schmück](https://github.com/EmmanuelSchmuck/)
   * [Marie Lamure](https://github.com/mlamure)
-  * [Vincent Jaillot](https://github.com/jailln)
+
   * [Valentin Rigolle](https://github.com/Crejak)
 
 * [virtualcitySYSTEMS](https://www.virtualcitysystems.de/)
@@ -38,9 +38,10 @@ The following people have contributed to iTowns.
 * [Prolexia](http://prolexia.fr/)
   * [Dorian MOFFROID](https://github.com/dorian-moffroid-prolexia)
 
-* [Diginove](http://diginove.com/index.php/fr/diginove-lexpertise-en-traitement-dimages/):
-  * [Michel Benet](https://github.com/mbenevole)
+* [Ciril GROUP](http://www.cirilgroup.com/)
+  * [Loïc Picavet](https://github.com/LoicUTC)
+  * [Vincent Jaillot](https://github.com/jailln)
 
-The following organizations are the current maintainers of iTowns:
-* IGN (http://www.ign.fr)
-* Ciril Group (https://www.cirilgroup.com/)
+The following organizations supported iTowns :
+* IGN ( http://www.ign.fr )
+* Ciril GROUP ( http://www.cirilgroup.fr )

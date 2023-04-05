@@ -1,0 +1,99 @@
+<html>
+    <head>
+        <title>Itowns - Globe + Multipolygon Geojson</title>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" type="text/css" href="css/example.css">
+        <link rel="stylesheet" type="text/css" href="css/LoadingScreen.css">
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>
+
+
+    </head>
+    <body>
+        <div id="viewerDiv" class="viewer"></div>
+        <script src="js/GUI/GuiTools.js"></script>
+        <script src="../dist/itowns.js"></script>
+        <script src="../dist/debug.js"></script>
+        <script type="text/javascript">var THREE=itowns.THREE;</script>
+        <!-- <script src="https://unpkg.com/browse/three@0.129.0/examples/js/utils/BufferGeometryUtils.js" ></script> -->
+        <script src="https://unpkg.com/three@0.129.0/examples/js/loaders/GLTFLoader.js"></script>
+        
+        <script type="text/javascript">
+            // Define initial camera position
+            // Define initial camera position
+            var positionOnGlobe = { longitude: -0.57918, latitude: 44.837789, altitude: 3000 };
+            var placement = {
+                coord: new itowns.Coordinates('EPSG:4326', -0.57918, 44.837789),
+                range: 3000,
+                tilt: 45,
+            }
+            // `viewerDiv` will contain iTowns' rendering area (`<canvas>`)
+            var viewerDiv = document.getElementById('viewerDiv');
+
+            // Instanciate iTowns GlobeView*
+            var view = new itowns.GlobeView(viewerDiv, placement);
+            var menuGlobe = new GuiTools('menuDiv', view);
+
+            var meshes = [];
+            var scaler;
+/*
+            var dirLight = new itowns.THREE.DirectionalLight(0xffffff, 1);
+            dirLight.position.set(-0.9, 0.3, 1);
+            dirLight.updateMatrixWorld();
+            view.scene.add( dirLight );
+*/
+            var ambLight = new itowns.THREE.AmbientLight(0xffffff, 0.2);
+            view.scene.add( ambLight );
+
+            // Add one imagery layer to the scene
+            // This layer is defined in a json file but it could be defined as a plain js
+
+            itowns.Fetcher.json('./layers/JSONLayers/Dark.json').then(function _(config) {
+                config.source = new itowns.TMSSource(config.source);
+                var layer = new itowns.ColorLayer('Ortho', config);
+                view.addLayer(layer).then(menuGlobe.addLayerGUI.bind(menuGlobe));
+            });
+     
+
+
+            // Defines a VectorTilesSource to load Vector Tiles data from the geoportail
+            /*var mvtSource = new itowns.VectorTilesSource({
+                style: 'https://api.maptiler.com/maps/topo/style.json?key=blEYOukasMdgzVSLbdB2',
+                // We don't display mountains related data to ease visualisation
+               // filter: (layer) => !layer['source-layer'].includes('oro_') && !layer['source-layer'].includes('parcellaire'),
+            });
+
+            var mvtLayer = new itowns.ColorLayer('MVT', {
+                source: mvtSource,
+                addLabelLayer: true,
+            });
+
+            view.addLayer(mvtLayer).then(menuGlobe.addLayerGUI.bind(menuGlobe));
+*/
+
+
+            // Add two elevation layers.
+            // These will deform iTowns globe geometry to represent terrain elevation.
+            function addElevationLayerFromConfig(config) {
+                config.source = new itowns.WMTSSource(config.source);
+                var layer = new itowns.ElevationLayer(config.id, config);
+                view.addLayer(layer).then(menuGlobe.addLayerGUI.bind(menuGlobe));
+            }
+           // itowns.Fetcher.json('./layers/JSONLayers/WORLD_DTM.json').then(addElevationLayerFromConfig);
+           // itowns.Fetcher.json('./layers/JSONLayers/IGN_MNT_HIGHRES.json').then(addElevationLayerFromConfig);
+
+            // var color = new itowns.THREE.Color();
+        
+        </script>
+    </body>
+
+    <script src="./loadVehicules.js"></script>
+   <!-- <script src="./loadPLU.js"></script>
+    
+    <script src="./loadBuilding.js"></script>
+     <script src="./loadTraffic.js"></script> -->
+</html>
+
+
+

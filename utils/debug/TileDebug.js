@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import TWEEN from '@tweenjs/tween.js';
+import View, { VIEW_EVENTS } from 'Core/View';
 import GeometryLayer from 'Layer/GeometryLayer';
 import { MAIN_LOOP_EVENTS } from 'Core/MainLoop';
 import ObjectRemovalHelper from 'Process/ObjectRemovalHelper';
@@ -68,6 +69,7 @@ export default function createTileDebugUI(datDebugTool, view, layer, debugInstan
 
     layer.showOutline = false;
     layer.wireframe = false;
+    layer.dynamicOpacity = false;
     const state = {
         objectChart: true,
         visibilityChart: true,
@@ -81,6 +83,26 @@ export default function createTileDebugUI(datDebugTool, view, layer, debugInstan
         applyToNodeFirstMaterial(view, layer.object3d, layer, (material) => {
             material.showOutline = newValue;
         });
+    });
+
+    // dynamic tiles opacity
+    gui.add(layer, 'dynamicOpacity').name('Dynamic opacity').onChange(() => {
+        if (layer.dynamicOpacity) {
+            view.addEventListener(VIEW_EVENTS.CAMERA_MOVED, view.updateVariableOpacityLayer);
+            layer.disableSkirt = true;
+            if (view.atmosphereLayer) {
+                view.removeLayer(view.atmosphereLayer.id);
+                view.scene.background = new THREE.Color(0x000000);
+            }
+        } else {
+            view.removeEventListener(VIEW_EVENTS.CAMERA_MOVED, view.updateVariableOpacityLayer);
+            layer.disableSkirt = false;
+            if (view.atmosphereLayer) {
+                view.addLayer(view.atmosphereLayer);
+            }
+            view.tileLayer.opacity = 1;
+        }
+        view.notifyChange(layer);
     });
 
     // tiles wireframe

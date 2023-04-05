@@ -145,7 +145,6 @@ class View extends THREE.EventDispatcher {
      * @param {?Scene} [options.scene3D] - [THREE.Scene](https://threejs.org/docs/#api/en/scenes/Scene) instance to use, otherwise a default one will be constructed
      * @param {?Color} options.diffuse - [THREE.Color](https://threejs.org/docs/?q=color#api/en/math/Color) Diffuse color terrain material.
      * This color is applied to terrain if there isn't color layer on terrain extent (by example on pole).
-     * @param {boolean} [options.enableFocusOnStart=true] - enable focus on dom element on start.
      *
      * @constructor
      */
@@ -222,9 +221,7 @@ class View extends THREE.EventDispatcher {
         // focused sequentially using tab key). Focus is needed to capture some key events.
         this.domElement.tabIndex = -1;
         // Set focus on view's domElement.
-        if (!options.disableFocusOnStart) {
-            this.domElement.focus();
-        }
+        this.domElement.focus();
 
         // Create a custom `dblclick-right` event that is triggered when double right-clicking
         let rightClickTimeStamp;
@@ -237,6 +234,19 @@ class View extends THREE.EventDispatcher {
                 rightClickTimeStamp = event.timeStamp;
             }
         });
+
+        // configure dynamic opacity
+        if (options.altitudeForZeroOpacity === undefined || options.altitudeForZeroOpacity === null) {
+            this.altitudeForZeroOpacity = 420;
+        } else {
+            this.altitudeForZeroOpacity = options.altitudeForZeroOpacity;
+        }
+
+        if (options.altitudeForFullOpacity === undefined || options.altitudeForFullOpacity === null) {
+            this.altitudeForFullOpacity = 2400;
+        } else {
+            this.altitudeForFullOpacity = options.altitudeForFullOpacity;
+        }
 
 
         // push all viewer to keep source.cache
@@ -289,6 +299,19 @@ class View extends THREE.EventDispatcher {
         viewers.splice(id, 1);
         // Remove remaining objects in the scene (e.g. helpers, debug, etc.)
         this.scene.traverse(ObjectRemovalHelper.cleanup);
+    }
+
+    altitudeForZeroOpacity;
+    altitudeForFullOpacity;
+    updateVariableOpacityLayer() {
+        var cameraTargetPosition = this.controls.getLookAtCoordinate();
+        var cameraTargetPosition2 = new Coordinates('EPSG:4326', cameraTargetPosition).as('EPSG:3946');
+        var cameraPosition = this.camera.position('EPSG:3946');
+
+        const distance = Math.sqrt(((cameraTargetPosition2.x - cameraPosition.x) * (cameraTargetPosition2.x - cameraPosition.x)  + (cameraTargetPosition2.y - cameraPosition.y) * (cameraTargetPosition2.y - cameraPosition.y) + (cameraTargetPosition2.z - cameraPosition.z) * (cameraTargetPosition2.z - cameraPosition.z)));
+
+        var opacity = THREE.MathUtils.clamp((distance - this.altitudeForZeroOpacity) / (this.altitudeForFullOpacity - this.altitudeForZeroOpacity), 0, 1);
+        this.tileLayer.opacity = opacity;
     }
 
     /**

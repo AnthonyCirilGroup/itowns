@@ -3,6 +3,7 @@ import GeometryLayer from 'Layer/GeometryLayer';
 import { init3dTilesLayer, pre3dTilesUpdate, process3dTilesNode } from 'Process/3dTilesProcessing';
 import C3DTileset from 'Core/3DTiles/C3DTileset';
 import C3DTExtensions from 'Core/3DTiles/C3DTExtensions';
+import { PNTS_MODE } from 'Renderer/PointsMaterial';
 
 const update = process3dTilesNode();
 
@@ -51,6 +52,7 @@ class C3DTilesLayer extends GeometryLayer {
      * is set up. config.overrideMaterials can also be a threejs [Material](https://threejs.org/docs/index.html?q=material#api/en/materials/Material)
      * in which case it will be used as the material for all objects of the layer.
      * @param {C3DTExtensions} [config.registeredExtensions] 3D Tiles extensions managers registered for this tileset.
+     * @param {String} [config.pntsMode= PNTS_MODE.COLOR] {@link PointsMaterials} Point cloud coloring mode. Only 'COLOR' or 'CLASSIFICATION' are possible. COLOR uses RGB colors of the points, CLASSIFICATION uses a classification property of the batch table to color points.
      * @param  {View}  view  The view
      */
     constructor(id, config, view) {
@@ -63,6 +65,15 @@ class C3DTilesLayer extends GeometryLayer {
         this.overrideMaterials = config.overrideMaterials ?? false;
         this.name = config.name;
         this.registeredExtensions = config.registeredExtensions || new C3DTExtensions();
+
+        this.pntsMode = PNTS_MODE.COLOR;
+
+        
+        if (config.pntsMode) {
+            const exists = Object.values(PNTS_MODE).includes(config.pntsMode);
+            if (!exists) { console.warn("The points cloud mode doesn't exist. Use 'COLOR' or 'CLASSIFICATION' instead."); } else { this.pntsMode = config.pntsMode; }
+        }
+
 
         this._cleanableTiles = [];
 
