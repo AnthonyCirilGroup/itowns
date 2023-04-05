@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { MAIN_LOOP_EVENTS } from 'Core/MainLoop';
-import { VIEW_EVENTS } from 'Core/View';
 
 // event keycode
 export const keys = {
@@ -370,10 +369,6 @@ class PlanarControls extends THREE.EventDispatcher {
             this.view.dispatchEvent({ type: PLANAR_CONTROL_EVENT.MOVED });
         }
         deltaMousePosition.set(0, 0);
-
-        this.view.dispatchEvent({
-            type: VIEW_EVENTS.CAMERA_MOVED,
-        });
     }
 
     /**

@@ -5,7 +5,6 @@ import { ellipsoidSizes } from 'Core/Math/Ellipsoid';
 import CameraUtils from 'Utils/CameraUtils';
 import StateControl from 'Controls/StateControl';
 import { VIEW_EVENTS } from 'Core/View';
-import { Camera } from 'three';
 
 // private members
 const EPS = 0.000001;
