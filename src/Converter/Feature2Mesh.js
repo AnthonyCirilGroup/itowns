@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import Earcut, { flatten } from 'earcut';
+import Earcut from 'earcut';
 import { FEATURE_TYPES } from 'Core/Feature';
 import ReferLayerProperties from 'Layer/ReferencingLayerProperties';
 import { deprecatedFeature2MeshOptions } from 'Core/Deprecated/Undeprecator';
@@ -7,12 +7,6 @@ import Extent from 'Core/Geographic/Extent';
 import Crs from 'Core/Geographic/Crs';
 import OrientationUtils from 'Utils/OrientationUtils';
 import Coordinates from 'Core/Geographic/Coordinates';
-import { Line, Mesh, MeshBasicMaterial, ReinhardToneMapping, Vector3 } from 'three';
-import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
-import { Line2 } from 'three/examples/jsm/lines/Line2';
-import { MeshLine, MeshLineMaterial, MeshLineRaycast } from 'three.meshline';
-import compare_func from 'compare-func';
 
 const coord = new Coordinates('EPSG:4326', 0, 0, 0);
 const dim_ref = new THREE.Vector2();
@@ -222,7 +216,7 @@ function featureToPoint(feature, options) {
     const ptsIn = feature.vertices;
     const normals = feature.normals;
     const colors = new Uint8Array(ptsIn.length);
-    const batchIds = options.batchId ? new Uint32Array(ptsIn.length / 3) : undefined;
+    const batchIds = options.batchId ?  new Uint32Array(ptsIn.length / 3) : undefined;
     let featureId = 0;
 
     let vertices;
@@ -265,11 +259,11 @@ function featureToLine(feature, options) {
     const colors = new Uint8Array(ptsIn.length);
     const count = ptsIn.length / 3;
 
-    const batchIds = options.batchId ? new Uint32Array(count) : undefined;
+    const batchIds = options.batchId ?  new Uint32Array(count) : undefined;
     let featureId = 0;
 
     let vertices;
-    const zTranslation = options.GlobalZTrans - feature.altitude.min;
+    const zTranslation =  options.GlobalZTrans - feature.altitude.min;
     if (zTranslation != 0) {
         vertices = new Float32Array(ptsIn.length);
         coordinatesToVertices(ptsIn, normals, vertices, zTranslation);
@@ -336,366 +330,6 @@ function featureToLine(feature, options) {
     return lines;
 }
 
-function featureToMeshLine(feature, options) {
-    const ptsIn = feature.vertices;
-    const normals = feature.normals;
-    const colors = new Uint8Array(ptsIn.length);
-    const count = ptsIn.length / 3;
-
-    const batchIds = options.batchId ? new Uint32Array(count) : undefined;
-    let featureId = 0;
-
-    let vertices;
-    const zTranslation = options.GlobalZTrans - feature.altitude.min;
-    if (zTranslation != 0) {
-        vertices = new Float32Array(ptsIn.length);
-        coordinatesToVertices(ptsIn, normals, vertices, zTranslation);
-    } else {
-        vertices = new Float32Array(ptsIn);
-    }
-    const geom = new THREE.BufferGeometry().setFromPoints(vertices);
-
-    let lines;
-
-    const matLine = new MeshLineMaterial({
-
-        color: 0xffffff,
-        linewidth: options.lineMaterial.linewidth, // in world units with size attenuation, pixels otherwise
-        vertexColors: true,
-        dashed: false,
-        alphaToCoverage: false,
-        side: THREE.DoubleSide,
-        depthTest: false,
-    });
-
-    // TODO CREATE material for each feature
-    options.lineMaterial.linewidth = feature.style.stroke.width;
-    const globals = { stroke: true };
-    if (feature.geometries.length > 1) {
-        const countIndices = (count - feature.geometries.length) * 2;
-        const indices = getIntArrayFromSize(countIndices, count);
-        let i = 0;
-        // Multi line case
-        for (const geometry of feature.geometries) {
-            const context = { globals, properties: () => geometry.properties };
-            const style = feature.style.drawingStylefromContext(context);
-
-            const start = geometry.indices[0].offset;
-            // To avoid integer overflow with indice value (16 bits)
-            if (start > 0xffff) {
-                console.warn('Feature to Line: integer overflow, too many points in lines');
-                break;
-            }
-            const count = geometry.indices[0].count;
-            const end = start + count;
-            fillColorArray(colors, count, toColor(style.stroke.color), start);
-            for (let j = start; j < end - 1; j++) {
-                if (j < 0xffff) {
-                    indices[i++] = j;
-                    indices[i++] = j + 1;
-                } else {
-                    break;
-                }
-            }
-            if (batchIds) {
-                const id = options.batchId(geometry.properties, featureId);
-                fillBatchIdArray(id, batchIds, start, end);
-                featureId++;
-            }
-        }
-        geom.setAttribute('color', new THREE.BufferAttribute(colors, 3, true));
-        if (batchIds) { geom.setAttribute('batchId', new THREE.BufferAttribute(batchIds, 1)); }
-        lines = new MeshLine();
-        lines.setGeometry(geom);
-    } else {
-        const context = { globals, properties: () => feature.geometries[0].properties };
-        const style = feature.style.drawingStylefromContext(context);
-
-        fillColorArray(colors, count, toColor(style.stroke.color));
-        geom.setAttribute('color', new THREE.BufferAttribute(colors, 3, true));
-        if (batchIds) {
-            const id = options.batchId(feature.geometries[0].properties, featureId);
-            fillBatchIdArray(id, batchIds, 0, count);
-            geom.setAttribute('batchId', new THREE.BufferAttribute(batchIds, 1));
-        }
-        lines = new MeshLine();
-        lines.setGeometry(geom);
-    }
-    return new THREE.Mesh(lines, matLine);
-}
-
-function featureToFatLine(feature, options) {
-    const ptsIn = feature.vertices;
-    const normals = feature.normals;
-    const colors = new Uint8Array(ptsIn.length);
-    const count = ptsIn.length / 3;
-
-    const batchIds = options.batchId ? new Uint32Array(count) : undefined;
-    let featureId = 0;
-
-    let vertices;
-    const zTranslation = options.GlobalZTrans - feature.altitude.min;
-    if (zTranslation != 0) {
-        vertices = new Float32Array(ptsIn.length);
-        coordinatesToVertices(ptsIn, normals, vertices, zTranslation);
-    } else {
-        vertices = new Float32Array(ptsIn);
-    }
-    const geom = new LineGeometry();
-    const verticesAsArray = Array.from(vertices);
-    geom.setPositions(verticesAsArray); // fonctionne
-
-    let lines;
-
-    // TODO CREATE material for each feature
-    options.lineMaterial.linewidth = feature.style.stroke.width;
-    const globals = { stroke: true };
-    if (feature.geometries.length > 1) {
-        const countIndices = (count - feature.geometries.length) * 2;
-        const indices = getIntArrayFromSize(countIndices, count);
-
-        let i = 0;
-        // Multi line case
-        for (const geometry of feature.geometries) {
-            const context = { globals, properties: () => geometry.properties };
-            const style = feature.style.drawingStylefromContext(context);
-
-            const start = geometry.indices[0].offset;
-            // To avoid integer overflow with indice value (16 bits)
-            if (start > 0xffff) {
-                console.warn('Feature to Line: integer overflow, too many points in lines');
-                break;
-            }
-            const count = geometry.indices[0].count;
-            const end = start + count;
-            fillColorArray(colors, count, toColor(style.stroke.color), start);
-            for (let j = start; j < end - 1; j++) {
-                if (j < 0xffff) {
-                    indices[i++] = j;
-                    indices[i++] = j + 1;
-                } else {
-                    break;
-                }
-            }
-
-            if (batchIds) {
-                const id = options.batchId(geometry.properties, featureId);
-                fillBatchIdArray(id, batchIds, start, end);
-                featureId++;
-            }
-        }
-        geom.setColors(colors);
-        if (batchIds) { geom.setAttribute('batchId', new THREE.BufferAttribute(batchIds, 1)); }
-
-        const matLine = new LineMaterial({
-
-            color: 0xffffff,
-            linewidth: options.lineMaterial.linewidth, // in world units with size attenuation, pixels otherwise
-            vertexColors: true,
-            dashed: false,
-            alphaToCoverage: false,
-            side: THREE.DoubleSide,
-            depthTest: false,
-        });
-
-        lines = new Line2(geom, matLine);
-        lines.computeLineDistances();
-        lines.scale.set(1, 1, 1);
-    } else {
-        const context = { globals, properties: () => feature.geometries[0].properties };
-        const style = feature.style.drawingStylefromContext(context);
-
-        fillColorArray(colors, count, toColor(style.stroke.color));
-        geom.setColors(colors);
-        if (batchIds) {
-            const id = options.batchId(feature.geometries[0].properties, featureId);
-            fillBatchIdArray(id, batchIds, 0, count);
-            geom.setAttribute('batchId', new THREE.BufferAttribute(batchIds, 1));
-        }
-
-        const matLine = new LineMaterial({
-
-            color: 0xffffff,
-            linewidth: 0.002, // in world units with size attenuation, pixels otherwise
-            vertexColors: true,
-            dashed: false,
-            alphaToCoverage: false,
-            side: THREE.DoubleSide,
-            depthTest: false,
-        });
-
-        lines = new Line2(geom, matLine);
-        lines.computeLineDistances();
-        lines.scale.set(1, 1, 1);
-    }
-    lines.material.depthTest = false;
-    return lines;
-}
-
-function generateCylinderMeshFromArmature(armature, cylinderResolution, cylinderRadius) {
-    const armatureCount = armature.length;
-
-    // generate vertices
-    const generatedVertices = [];
-
-    // for each armature vertex
-    for (let armatureVertexIndex = 0; armatureVertexIndex < armatureCount; armatureVertexIndex++) {
-        const currentVertice = armature[armatureVertexIndex];
-
-        let previousVertice;
-        if (armatureVertexIndex > 0) {
-            previousVertice = armature[armatureVertexIndex - 1];
-        }
-
-        let nextVertice;
-        if (armatureVertexIndex < armatureCount - 1) {
-            nextVertice = armature[armatureVertexIndex + 1];
-        }
-
-        // eslint-disable-next-line no-undef
-        const averageForwardDirection = new Vector3(0, 0, 0);
-        if (previousVertice && nextVertice) {
-            // eslint-disable-next-line no-undef
-            const previousToCurrent = new Vector3(0, 0, 0);
-            previousToCurrent.subVectors(currentVertice, previousVertice);
-            previousToCurrent.normalize();
-
-            // eslint-disable-next-line no-undef
-            const currentToNext = new Vector3(0, 0, 0);
-            currentToNext.subVectors(nextVertice, currentVertice);
-            currentToNext.normalize();
-
-            averageForwardDirection.addVectors(previousToCurrent, currentToNext);
-        } else if (previousVertice) {
-            averageForwardDirection.subVectors(currentVertice, previousVertice);
-        } else if (nextVertice) {
-            averageForwardDirection.subVectors(nextVertice, currentVertice);
-        } else {
-            console.warn('Error : couldn\'t get direction of vertice');
-        }
-
-        averageForwardDirection.normalize();
-
-        // eslint-disable-next-line no-undef
-        const random = new Vector3(0, 1, 0);
-        // eslint-disable-next-line no-undef
-        var up = new Vector3(0, 0, 0);
-        up.crossVectors(averageForwardDirection, random);
-        // eslint-disable-next-line no-undef
-        var right = new Vector3(0, 0, 0);
-        right.crossVectors(averageForwardDirection, up);
-
-        up.normalize();
-        right.normalize();
-        // for each vertex of the circle
-        for (let meshCircleIndex = 0; meshCircleIndex < cylinderResolution; meshCircleIndex++) {
-            // eslint-disable-next-line no-undef
-            const verticalComponent = new Vector3(0, 0, 0);
-            verticalComponent.copy(up);
-            verticalComponent.multiplyScalar(Math.cos((meshCircleIndex / cylinderResolution) * 2 * Math.PI) * cylinderRadius);
-            // eslint-disable-next-line no-undef
-            const horizontalComponent = new Vector3(0, 0, 0);
-            horizontalComponent.copy(right);
-            horizontalComponent.multiplyScalar(Math.sin((meshCircleIndex / cylinderResolution) * 2 * Math.PI) * cylinderRadius);
-            // eslint-disable-next-line no-undef
-            const newVertice = new Vector3(0, 0, 0);
-            newVertice.copy(currentVertice);
-            newVertice.add(verticalComponent);
-            newVertice.add(horizontalComponent);
-            generatedVertices[armatureVertexIndex * cylinderResolution + meshCircleIndex] = newVertice;
-        }
-    }
-    generatedVertices.push(armature[0]);
-    generatedVertices.push(armature[armatureCount - 1]);
-
-    // generate triangles
-    const generatedTriangles = [];
-    for (let armatureVertexIndex = 0; armatureVertexIndex < armatureCount - 1; armatureVertexIndex++) {
-        for (let meshCircleIndex = 0; meshCircleIndex < cylinderResolution - 1; meshCircleIndex++) {
-            generatedTriangles[armatureVertexIndex * cylinderResolution * 2 * 3 + meshCircleIndex * 2 * 3 + 1] = armatureVertexIndex * cylinderResolution + meshCircleIndex + 1;
-            generatedTriangles[armatureVertexIndex * cylinderResolution * 2 * 3 + meshCircleIndex * 2 * 3 + 0] = armatureVertexIndex * cylinderResolution + meshCircleIndex;
-            generatedTriangles[armatureVertexIndex * cylinderResolution * 2 * 3 + meshCircleIndex * 2 * 3 + 2] = (armatureVertexIndex + 1) * cylinderResolution + meshCircleIndex;
-
-            generatedTriangles[armatureVertexIndex * cylinderResolution * 2 * 3 + meshCircleIndex * 2 * 3 + 4] = (armatureVertexIndex + 1) * cylinderResolution + meshCircleIndex + 1;
-            generatedTriangles[armatureVertexIndex * cylinderResolution * 2 * 3 + meshCircleIndex * 2 * 3 + 3] = armatureVertexIndex * cylinderResolution + meshCircleIndex + 1;
-            generatedTriangles[armatureVertexIndex * cylinderResolution * 2 * 3 + meshCircleIndex * 2 * 3 + 5] = (armatureVertexIndex + 1) * cylinderResolution + meshCircleIndex;
-        }
-
-        // for the last face of the cylinder contour
-        generatedTriangles[armatureVertexIndex * cylinderResolution * 2 * 3 + (cylinderResolution - 1) * 2 * 3 + 1] = armatureVertexIndex * cylinderResolution + 0;
-        generatedTriangles[armatureVertexIndex * cylinderResolution * 2 * 3 + (cylinderResolution - 1) * 2 * 3 + 0] = armatureVertexIndex * cylinderResolution + (cylinderResolution - 1);
-        generatedTriangles[armatureVertexIndex * cylinderResolution * 2 * 3 + (cylinderResolution - 1) * 2 * 3 + 2] = (armatureVertexIndex + 1) * cylinderResolution + (cylinderResolution - 1);
-
-        generatedTriangles[armatureVertexIndex * cylinderResolution * 2 * 3 + (cylinderResolution - 1) * 2 * 3 + 4] = (armatureVertexIndex + 1) * cylinderResolution + 0;
-        generatedTriangles[armatureVertexIndex * cylinderResolution * 2 * 3 + (cylinderResolution - 1) * 2 * 3 + 3] = armatureVertexIndex * cylinderResolution + 0;
-        generatedTriangles[armatureVertexIndex * cylinderResolution * 2 * 3 + (cylinderResolution - 1) * 2 * 3 + 5] = (armatureVertexIndex + 1) * cylinderResolution + (cylinderResolution - 1);
-    }
-
-    let generatedTrianglesIndex = cylinderResolution * (armatureCount - 1) * 2 * 3;
-    for (let i = 0; i < cylinderResolution - 1; i++) {
-        generatedTriangles[generatedTrianglesIndex++] = i;
-        generatedTriangles[generatedTrianglesIndex++] = i + 1;
-        generatedTriangles[generatedTrianglesIndex++] = generatedVertices.length - 2;
-
-        generatedTriangles[generatedTrianglesIndex++] = generatedVertices.length - 2 - cylinderResolution + i;
-        generatedTriangles[generatedTrianglesIndex++] = generatedVertices.length - 2 - cylinderResolution + i + 1;
-        generatedTriangles[generatedTrianglesIndex++] = generatedVertices.length - 1;
-    }
-    generatedTriangles[generatedTrianglesIndex++] = cylinderResolution - 1;
-    generatedTriangles[generatedTrianglesIndex++] = 0;
-    generatedTriangles[generatedTrianglesIndex++] = generatedVertices.length - 2;
-
-    generatedTriangles[generatedTrianglesIndex++] = generatedVertices.length - 3;
-    generatedTriangles[generatedTrianglesIndex++] = generatedVertices.length - 2 - cylinderResolution;
-    generatedTriangles[generatedTrianglesIndex++] = generatedVertices.length - 1;
-
-    // generate mesh.
-    const geom = new THREE.BufferGeometry();
-    geom.setAttribute('position', new THREE.Float32BufferAttribute(vector3ArrayToFloat32Array(generatedVertices), 3));
-    geom.setIndex(new THREE.Uint32BufferAttribute(generatedTriangles, 3));
-
-
-    const wireframeMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
-
-    const generatedMesh = new THREE.Mesh(geom, wireframeMaterial);
-    generatedMesh.updateMatrix();
-    return generatedMesh;
-}
-
-function vector3ArrayToFloat32Array(toConvert) {
-    const toReturn = new Float32Array(toConvert.length * 3);
-    for (let i = 0; i < toConvert.length; i++) {
-        toReturn[i * 3 + 0] = toConvert[i].x;
-        toReturn[i * 3 + 1] = toConvert[i].y;
-        toReturn[i * 3 + 2] = toConvert[i].z;
-    }
-
-    return toReturn;
-}
-
-function featureToExtrudedCylinder(feature, options) {
-    const verticesBuffer = feature.vertices;
-    const vertices = [];
-    const toReturnGeometry = new THREE.BufferGeometry();
-
-    for (let i = 0; i < verticesBuffer.length / 3; i++) {
-        vertices[i] = new Vector3(verticesBuffer[3 * i], verticesBuffer[3 * i + 1], verticesBuffer[3 * i + 2]);
-    }
-
-    var geometryMesh;
-    for (const geometry of feature.geometries) {
-        const start = geometry.indices[0].offset;
-        const count = geometry.indices[0].count;
-        if (count > 1) {
-            geometryMesh = generateCylinderMeshFromArmature(vertices.slice(start, start + count), 4, 100);
-            toReturnGeometry.merge(geometryMesh.geometry, geometryMesh.matrix);
-        }
-    }
-
-    const wireframeMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
-    return new THREE.Mesh(toReturnGeometry, wireframeMaterial);
-}
-
 function featureToPolygon(feature, options) {
     const ptsIn = feature.vertices;
     const normals = feature.normals;
@@ -712,7 +346,7 @@ function featureToPolygon(feature, options) {
     const colors = new Uint8Array(ptsIn.length);
     const indices = [];
 
-    const batchIds = options.batchId ? new Uint32Array(vertices.length / 3) : undefined;
+    const batchIds = options.batchId ?  new Uint32Array(vertices.length / 3) : undefined;
     const globals = { fill: true };
     let featureId = 0;
 
@@ -782,7 +416,7 @@ function featureToExtrudedPolygon(feature, options) {
     const indices = [];
     const totalVertices = ptsIn.length / 3;
 
-    const batchIds = options.batchId ? new Uint32Array(vertices.length / 3) : undefined;
+    const batchIds = options.batchId ?  new Uint32Array(vertices.length / 3) : undefined;
     let featureId = 0;
 
     const z = options.GlobalZTrans - feature.altitude.min;

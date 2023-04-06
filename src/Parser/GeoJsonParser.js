@@ -141,7 +141,9 @@ function toFeatureType(jsonType) {
 
 const keyProperties = ['type', 'geometry', 'properties'];
 
-const firstCoordinates = a => (Array.isArray(a) && !isNaN(a[0])  ? a : firstCoordinates(a[0]));
+const firstCoordinates = a => (Array.isArray(a) && (!a.length || !isNaN(a[0]))  ? a : firstCoordinates(a[0]));
+// const firstCoordinates = a =>  a === undefined || (Array.isArray(a) && !isNaN(a[0])  ? a : firstCoordinates(a[0]));
+// const firstCoordinates = a => (Array.isArray(a) && !isNaN(a[0])  ? a : firstCoordinates(a[0]));
 
 function jsonFeatureToFeature(crsIn, json, collection) {
     if (!json.geometry || !json.geometry.type) {
@@ -156,6 +158,7 @@ function jsonFeatureToFeature(crsIn, json, collection) {
     const coordinates = jsonType != 'point' ? json.geometry.coordinates : [json.geometry.coordinates];
     const properties = json.properties || {};
     feature.hasRawElevationData = firstCoordinates(coordinates)?.length === 3;
+    // feature.hasRawElevationData = coordinates[0]?.length === 3;
 
     // copy other properties
     for (const key of Object.keys(json)) {
