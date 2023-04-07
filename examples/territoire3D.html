@@ -8,8 +8,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>
     </head>
-    <body>
-        <div id="viewerDiv" class="viewer"></div>
+    <body style="background-color: black;">
+        <div id="viewerDiv" style="width:40vw;height:40vh; position: absolute; right: 40%; top:40%" class="viewer"></div>
         <script src="js/GUI/GuiTools.js"></script>
         <script src="../dist/itowns.js"></script>
         <script src="../dist/debug.js"></script>
@@ -36,18 +36,18 @@
             view.scene.add( ambLight );
 
             // Add one imagery layer to the scene
-           /*itowns.Fetcher.json('./layers/JSONLayers/Ortho.json').then(function _(config) {
+           itowns.Fetcher.json('./layers/JSONLayers/Ortho.json').then(function _(config) {
                 config.source = new itowns.WMTSSource(config.source);
                 var layer = new itowns.ColorLayer('Ortho', config);
                 view.addLayer(layer).then(menuGlobe.addLayerGUI.bind(menuGlobe));
             });
-    */
-            itowns.Fetcher.json('./layers/JSONLayers/Dark.json').then(function _(config) {
+    
+           /* itowns.Fetcher.json('./layers/JSONLayers/Dark.json').then(function _(config) {
                 config.source = new itowns.TMSSource(config.source);
                 var layer = new itowns.ColorLayer('Ortho', config);
                 view.addLayer(layer).then(menuGlobe.addLayerGUI.bind(menuGlobe));
             });
-
+*/
 
             /* Arbres */
     const trunkRadius = 5;
@@ -218,7 +218,7 @@ var color = new itowns.THREE.Color();
  // ---------- DISPLAY VECTOR TILED BUILDING DATA AS 3D MESHES : ----------
 
             // Define the source of the building data : those are vector tiled data from the geoportail.
-            const buildingsSource = new itowns.VectorTilesSource({
+       /*     const buildingsSource = new itowns.VectorTilesSource({
                 style: 'https://wxs.ign.fr/essentiels/static/vectorTiles/styles/PLAN.IGN/standard.json',
                 // We only want to display buildings related data.
                 filter: (layer) => {
@@ -246,7 +246,7 @@ var color = new itowns.THREE.Color();
                 debug.GeometryDebug.addWireFrameCheckbox(gui, view, layer);
             })
 
-
+*/
 
             // Eau 
 
@@ -268,7 +268,7 @@ var color = new itowns.THREE.Color();
                 }),
             });
 
-             view.addLayer(eauLayer);
+          //   view.addLayer(eauLayer);
 
 // Electriques
 
@@ -276,23 +276,66 @@ loader.load(
     // resource URL
     // 'http://localhost:8080/data/lampadaire/scene.gltf',
     //  'http://localhost:8080/data/giant_low_poly_tree/scene.gltf',
-     'http://localhost:8080/data/tree_low-poly_3d_model/scene.gltf',
+    // 'http://localhost:8080/data/tree_low-poly_3d_model/scene.gltf',
+    // '../data/tree_low-poly_3d_model/scene.gltf',
+    'http://localhost:8080/data/lampadaire/scene.gltf',
+
     // called when the resource is loaded
     (gltf) => {
         // styleModel3D.model.object = gltf.scene; 
         //view.scene.add(gltf.scene);
         //mergeAll(gltf.scene);
         console.log(gltf.scene);  
-        gltf.scene.children[0].rotateZ(Math.PI);
-        gltf.scene.children[0].scale.set(0.02, 0.02, 0.02);
-  
+  /*     gltf.scene.rotateZ(Math.PI);
+       // gltf.scene.children[0].rotateZ(Math.PI);
+    //    gltf.scene.children[0].scale.set(0.02, 0.02, 0.02);
+       gltf.scene.scale.set(0.001, 0.001, 0.001);
+       gltf.scene.position.z = 280 ;
+
         gltf.scene.updateMatrix();
-        gltf.scene.updateMatrixWorld();
+        gltf.scene.updateMatrixWorld();*/
+
+
+        var model = gltf.scene;
+
+        // building coordinate
+        var coord = new itowns.Coordinates('EPSG:4326',  -0.57918, 44.837789);
+
         
+        model.position.set( 0, 0, 0 );
+        model.rotation.set( 0, 0, 0 );
+        model.scale.set( 1, 1, 1 );
+        model.updateMatrix();
+
         
+/*
+        model.children[0].position.set( 0, 0, 0 );
+        model.children[0].rotation.set( 0, 0, 0 );
+        model.children[0].scale.set( 1, 1, 1 );
+        model.children[0].updateMatrix();
+*/
+        // model.position.copy(coord.as(view.referenceCrs));
+        // model.rotateY(Math.PI/4.0);
+        model.rotateX(Math.PI/2.0);
+
+        // model.children[0].scale.set(120, 120, 120);
+        model.scale.set(120, 120, 120);
+        // model.scale.set(0.1, 0.1, 0.1);
+        // const defaultTransform = new THREE.Matrix4()
+		// 			.makeRotationX( Math.PI )
+		// 			.multiply( new THREE.Matrix4().makeScale( 7, 7, 7 ) );
+        // model.defaultTransform =
+
+        // update coordinate of the mesh
+        model.updateMatrixWorld();
+
+        // view.scene.add(model);
+        // view.notifyChange();
+                
     var styleModel3D = new itowns.Style({
-            // model: { object:  gltf.scene }
-             model : { object : makeRectangle()}
+        model: { object: model  }
+        // model: { object:  gltf.scene }
+            //  model : { object : makeRectangle()}
     });
 
     var lightSource = new itowns.FileSource({
@@ -329,8 +372,9 @@ loader.load(
 loader.load(
     // resource URL
     // 'http://localhost:8080/data/lampadaire/scene.gltf',
-    // 'http://localhost:8080/data/giant_low_poly_tree/scene.gltf',
-     'http://localhost:8080/data/tree_low-poly_3d_model/scene.gltf',
+    'http://localhost:8080/data/giant_low_poly_tree/scene.gltf',
+    // 'http://localhost:8080/data/tree_low-poly_3d_model/scene.gltf',
+    // '../data/tree_low-poly_3d_model/scene.gltf',
     // called when the resource is loaded
     (gltf) => {
 
@@ -339,11 +383,45 @@ loader.load(
 
         gltf.scene.updateMatrix();
         gltf.scene.updateMatrixWorld();
+
+        
+        var model = gltf.scene;
+
+        // building coordinate
+      //  var coord = new itowns.Coordinates('EPSG:4326',  -0.57918, 44.837789);
+
+        
+        model.position.set( 0, 0, 0 );
+        model.rotation.set( 0, 0, 0 );
+        model.scale.set( 1, 1, 1 );
+        model.updateMatrix();
+
+        
+/*
+        model.children[0].position.set( 0, 0, 0 );
+        model.children[0].rotation.set( 0, 0, 0 );
+        model.children[0].scale.set( 1, 1, 1 );
+        model.children[0].updateMatrix();*/
+
+      //  model.position.copy(coord.as(view.referenceCrs));
+      model.position.z = 280 ;
+
+        model.rotateY(Math.PI/4.0);
+
+        // model.children[0].scale.set(12, 12, 12);
+        model.scale.set(12, 12, 12);
+
+        // update coordinate of the mesh
+        model.updateMatrixWorld();
+
+        // view.scene.add(model);
+        // view.notifyChange();
         
         
     var styleModel3D = new itowns.Style({
-             // model: { object:  gltf.scene  }
-              model : { object : makeTree() }
+        model: { object:  model  }
+        // model: { object:  gltf.scene  }
+            //   model : { object : makeTree() }
              // model : { object : makeRectangle()}
     });
 
@@ -364,8 +442,8 @@ loader.load(
         style:  styleModel3D
     });
 
-    view.addLayer(arbreLayer);
-
+   view.addLayer(arbreLayer);
+//
 
     },
     // called while loading is progressing
