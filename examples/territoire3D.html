@@ -274,68 +274,18 @@ var color = new itowns.THREE.Color();
 
 loader.load(
     // resource URL
-    // 'http://localhost:8080/data/lampadaire/scene.gltf',
-    //  'http://localhost:8080/data/giant_low_poly_tree/scene.gltf',
-    // 'http://localhost:8080/data/tree_low-poly_3d_model/scene.gltf',
-    // '../data/tree_low-poly_3d_model/scene.gltf',
-    'http://localhost:8080/data/lampadaire/scene.gltf',
+    '../data/lampadaire/scene.gltf',
 
     // called when the resource is loaded
     (gltf) => {
-        // styleModel3D.model.object = gltf.scene; 
-        //view.scene.add(gltf.scene);
-        //mergeAll(gltf.scene);
-        console.log(gltf.scene);  
-  /*     gltf.scene.rotateZ(Math.PI);
-       // gltf.scene.children[0].rotateZ(Math.PI);
-    //    gltf.scene.children[0].scale.set(0.02, 0.02, 0.02);
-       gltf.scene.scale.set(0.001, 0.001, 0.001);
-       gltf.scene.position.z = 280 ;
-
-        gltf.scene.updateMatrix();
-        gltf.scene.updateMatrixWorld();*/
-
-
         var model = gltf.scene;
 
-        // building coordinate
-        var coord = new itowns.Coordinates('EPSG:4326',  -0.57918, 44.837789);
-
-        
-        model.position.set( 0, 0, 0 );
-        model.rotation.set( 0, 0, 0 );
-        model.scale.set( 1, 1, 1 );
-        model.updateMatrix();
-
-        
-/*
-        model.children[0].position.set( 0, 0, 0 );
-        model.children[0].rotation.set( 0, 0, 0 );
-        model.children[0].scale.set( 1, 1, 1 );
-        model.children[0].updateMatrix();
-*/
-        // model.position.copy(coord.as(view.referenceCrs));
-        // model.rotateY(Math.PI/4.0);
         model.rotateX(Math.PI/2.0);
-
-        // model.children[0].scale.set(120, 120, 120);
-        model.scale.set(120, 120, 120);
-        // model.scale.set(0.1, 0.1, 0.1);
-        // const defaultTransform = new THREE.Matrix4()
-		// 			.makeRotationX( Math.PI )
-		// 			.multiply( new THREE.Matrix4().makeScale( 7, 7, 7 ) );
-        // model.defaultTransform =
-
-        // update coordinate of the mesh
-        model.updateMatrixWorld();
-
-        // view.scene.add(model);
-        // view.notifyChange();
+        gltf.scene.position.z = 10 ;
+        model.scale.set(12, 12, 12);
                 
     var styleModel3D = new itowns.Style({
         model: { object: model  }
-        // model: { object:  gltf.scene }
-            //  model : { object : makeRectangle()}
     });
 
     var lightSource = new itowns.FileSource({
@@ -371,56 +321,23 @@ loader.load(
 
 loader.load(
     // resource URL
-    // 'http://localhost:8080/data/lampadaire/scene.gltf',
-    'http://localhost:8080/data/giant_low_poly_tree/scene.gltf',
-    // 'http://localhost:8080/data/tree_low-poly_3d_model/scene.gltf',
-    // '../data/tree_low-poly_3d_model/scene.gltf',
+    '../data/giant_low_poly_tree/scene.gltf',   // TODO -> load exemple to git itowns2
     // called when the resource is loaded
     (gltf) => {
-
-        console.log(gltf.scene);  
-        // gltf.scene.rotateY(Math.PI );
-
-        gltf.scene.updateMatrix();
-        gltf.scene.updateMatrixWorld();
-
         
-        var model = gltf.scene;
+    var model = gltf.scene;
 
-        // building coordinate
-      //  var coord = new itowns.Coordinates('EPSG:4326',  -0.57918, 44.837789);
+    
+    model.position.z = 270 ;
 
-        
-        model.position.set( 0, 0, 0 );
-        model.rotation.set( 0, 0, 0 );
-        model.scale.set( 1, 1, 1 );
-        model.updateMatrix();
+    model.rotateX(Math.PI/2.0);
 
-        
-/*
-        model.children[0].position.set( 0, 0, 0 );
-        model.children[0].rotation.set( 0, 0, 0 );
-        model.children[0].scale.set( 1, 1, 1 );
-        model.children[0].updateMatrix();*/
+    model.scale.set(3, 3, 3);
 
-      //  model.position.copy(coord.as(view.referenceCrs));
-      model.position.z = 280 ;
-
-        model.rotateY(Math.PI/4.0);
-
-        // model.children[0].scale.set(12, 12, 12);
-        model.scale.set(12, 12, 12);
-
-        // update coordinate of the mesh
-        model.updateMatrixWorld();
-
-        // view.scene.add(model);
-        // view.notifyChange();
-        
+       
         
     var styleModel3D = new itowns.Style({
         model: { object:  model  }
-        // model: { object:  gltf.scene  }
             //   model : { object : makeTree() }
              // model : { object : makeRectangle()}
     });
@@ -429,7 +346,6 @@ loader.load(
 
     var arbreSource = new itowns.FileSource({
         url: './layers/JSONLayers/trees.geojson',
-        // url: './layers/JSONLayers/point lumineux bordeaux 2019.geojson',
         crs: 'EPSG:4326',
         fetcher: itowns.Fetcher.json,
         parser: itowns.GeoJsonParser.parse,

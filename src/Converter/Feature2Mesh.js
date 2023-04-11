@@ -122,18 +122,12 @@ function getIntArrayFromSize(data, size) {
 }
 
 function separateMeshes(object3D) {
-    console.log(object3D)
     var meshes = [];
-
+    object3D.updateMatrixWorld();
     object3D.traverse((element) => {
         if (element instanceof THREE.Mesh) {
-            console.log(element)
             element.updateMatrixWorld();
-
             element.geometry.applyMatrix4(element.matrixWorld);
-            // element.geometry.applyMatrix4(element.matrix);
-            // element.geometry.applyMatrix4(object3D.matrix);
-
             meshes.push(element);
         }
     });
@@ -532,7 +526,7 @@ function createInstancedMesh(mesh, count, ptsIn) {
  */
 function featureTo3DModel(feature) {
     const ptsIn = feature.vertices;
-    const count = 2;//feature.geometries.length;    //2
+    const count = feature.geometries.length;    //2
     const modelObject = feature.style.model.object;
 
     if (modelObject instanceof THREE.Mesh) {
