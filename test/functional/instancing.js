@@ -4,7 +4,7 @@ describe('instancing', function _() {
     let result;
     before(async () => {
         result = await loadExample(
-            'examples/territoire3D.html',
+            'examples/instancing.html',
             this.fullTitle(),
         );
     });
@@ -29,6 +29,7 @@ describe('instancing', function _() {
         assert.ok(objects.indexOf('lights') >= 0);
         assert.ok(objects.indexOf('trees') >= 0); */
 
+        //TODO remove for debug only
         page.on('console', async (msg) => {
             const msgArgs = msg.args();
             for (let i = 0; i < msgArgs.length; ++i) {
