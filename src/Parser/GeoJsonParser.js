@@ -158,7 +158,6 @@ function jsonFeatureToFeature(crsIn, json, collection) {
     const coordinates = jsonType != 'point' ? json.geometry.coordinates : [json.geometry.coordinates];
     const properties = json.properties || {};
     feature.hasRawElevationData = firstCoordinates(coordinates)?.length === 3;
-    // feature.hasRawElevationData = coordinates[0]?.length === 3;
 
     // copy other properties
     for (const key of Object.keys(json)) {

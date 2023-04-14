@@ -557,6 +557,7 @@ function featureToMesh(feature, options) {
     var mesh;
     switch (feature.type) {
         case FEATURE_TYPES.POINT:
+            // TODO correct error
             if (feature.style.model) {
                 mesh = featureTo3DModel(feature, options);
             } else {
