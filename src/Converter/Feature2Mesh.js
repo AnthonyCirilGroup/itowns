@@ -526,7 +526,7 @@ function createInstancedMesh(mesh, count, ptsIn) {
  */
 function featureTo3DModel(feature) {
     const ptsIn = feature.vertices;
-    const count = feature.geometries.length;    //2
+    const count = feature.geometries.length;
     const modelObject = feature.style.model.object;
 
     if (modelObject instanceof THREE.Mesh) {
