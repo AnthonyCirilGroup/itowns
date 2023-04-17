@@ -54,7 +54,8 @@ describe('Feature2Mesh', function () {
         }));
 
     it('convert points, lines and mesh', () =>
-        parsed2.then((collection) => {
+    
+        parsed2.then((collection) => {           
             const mesh = Feature2Mesh.convert()(collection).meshes;
             assert.equal(mesh.children[0].type, 'Points');
             assert.equal(mesh.children[1].type, 'Line');

@@ -65,7 +65,9 @@
     "pbf": "^3.2.1",
     "regenerator-runtime": "^0.13.9",
     "shpjs": "^4.0.2",
-    "text-encoding-utf-8": "^1.0.2"
+    "text-encoding-utf-8": "^1.0.2",
+    "three-fatline": "^0.5.3",
+    "three.meshline": "^1.4.0"
   },
   "peerDependencies": {
     "proj4": "^2.8.0",

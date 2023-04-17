@@ -67,6 +67,7 @@
                 "WFSSource",
                 "TMSSource",
                 "FileSource",
+                "SearchAPISource",
                 "OrientedImageSource",
                 "PotreeSource",
                 "VectorTilesSource",

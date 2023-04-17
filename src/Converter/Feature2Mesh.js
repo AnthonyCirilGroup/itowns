@@ -121,6 +121,20 @@ function getIntArrayFromSize(data, size) {
     }
 }
 
+function separateMeshes(object3D) {
+    var meshes = [];
+    object3D.updateMatrixWorld();
+    object3D.traverse((element) => {
+        if (element instanceof THREE.Mesh) {
+            element.updateMatrixWorld();
+            element.geometry.applyMatrix4(element.matrixWorld);
+            meshes.push(element);
+        }
+    });
+
+    return meshes;
+}
+
 /**
  * Convert coordinates to vertices positionned at a given altitude
  *
@@ -482,11 +496,58 @@ function featureToExtrudedPolygon(feature, options) {
 }
 
 /**
+ * Created Instanced object from on mesh
+ *
+ * @param {THREE.MESH} mesh Model 3D to instanciate
+ * @param {*} count number of instances to create (int)
+ * @param {*} ptsIn positions of instanced (array double)
+ * @returns {THREE.InstancedMesh} Instanced mesh
+ */
+function createInstancedMesh(mesh, count, ptsIn) {
+    var instancedMesh = new THREE.InstancedMesh(mesh.geometry, mesh.material, count);
+    var index = 0;
+    for (let i = 0; i < count; i += 3) {
+        const mat = new THREE.Matrix4();
+        mat.setPosition(ptsIn[i], ptsIn[i + 1], ptsIn[i + 2]);
+        instancedMesh.setMatrixAt(index, mat);
+        index++;
+    }
+
+    instancedMesh.instanceMatrix.needsUpdate = true;
+
+    return instancedMesh;
+}
+
+/**
+ * Convert a [Feature]{@link Feature} to a Instanced 3d Model
+ *
+ * @param {Object} feature
+ * @returns {THREE.Mesh} mesh or GROUP of THREE.InstancedMesh
+ */
+function featureTo3DModel(feature) {
+    const ptsIn = feature.vertices;
+    const count = feature.geometries.length;
+    const modelObject = feature.style.model.object;
+
+    if (modelObject instanceof THREE.Mesh) {
+        return createInstancedMesh(modelObject, count, ptsIn);
+    } else if (modelObject instanceof THREE.Object3D) {
+        const group = new THREE.Group();
+        // Get independent meshes from more complexe object
+        var meshes = separateMeshes(modelObject);
+        meshes.forEach(mesh => group.add(createInstancedMesh(mesh, count, ptsIn)));
+        return group;
+    } else {
+        console.error('Format not supported');
+    }
+}
+
+/**
  * Convert a [Feature]{@link Feature} to a Mesh
  *
  * @param {Feature} feature - the feature to convert
  * @param {Object} options - options controlling the conversion
- * @return {THREE.Mesh} mesh
+ * @return {THREE.Mesh} mesh or GROUP of THREE.InstancedMesh
  */
 function featureToMesh(feature, options) {
     if (!feature.vertices) {
@@ -496,24 +557,33 @@ function featureToMesh(feature, options) {
     var mesh;
     switch (feature.type) {
         case FEATURE_TYPES.POINT:
-            mesh = featureToPoint(feature, options);
+            // TODO correct error
+            if (feature.style.model) {
+                mesh = featureTo3DModel(feature, options);
+            } else {
+                mesh = featureToPoint(feature, options);
+                mesh.material.vertexColors = true;
+                mesh.material.color = new THREE.Color(0xffffff);
+            }
             break;
         case FEATURE_TYPES.LINE:
             mesh = featureToLine(feature, options);
+            mesh.material.vertexColors = true;
+            mesh.material.color = new THREE.Color(0xffffff);
             break;
         case FEATURE_TYPES.POLYGON:
             if (feature.style.fill.extrusion_height) {
                 mesh = featureToExtrudedPolygon(feature, options);
+                mesh.material.vertexColors = true;
+                mesh.material.color = new THREE.Color(0xffffff);
             } else {
                 mesh = featureToPolygon(feature, options);
+                mesh.material.vertexColors = true;
+                mesh.material.color = new THREE.Color(0xffffff);
             }
             break;
         default:
     }
-
-    // set mesh material
-    mesh.material.vertexColors = true;
-    mesh.material.color = new THREE.Color(0xffffff);
 
     mesh.feature = feature;
     mesh.position.z = feature.altitude.min - options.GlobalZTrans;
