@@ -11,11 +11,7 @@
     </head>
     <body>
         <div id="viewerDiv"></div>
-        <div id="description">
-            <!-- <p><b>Feature Information:</b></p> -->
-            <button title='Changer de mode' onclick='switchMode()'>Changer de mode</button>
-            <div id="featureInfo"></div>
-        </div>
+      
         <script src="js/GUI/GuiTools.js"></script>
         <script src="../dist/itowns.js"></script>
         <script src="js/GUI/LoadingScreen.js"></script>
@@ -113,6 +109,13 @@
                 view.notifyChange(view.camera.camera3D);
             }
         }
+        d.switch = function() {
+                switchMode();
+            }
+            menuGlobe.gui.add(d, 'switch').name('Mode Switch');
+
+            
+
         
             //Tree    
             const trunkRadius = 5;
