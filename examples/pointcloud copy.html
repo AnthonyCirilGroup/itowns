@@ -12,8 +12,7 @@
     <body>
         <div id="viewerDiv"></div>
         <div id="description">
-            <!-- <p><b>Feature Information:</b></p> -->
-            <button title='Changer de mode' onclick='switchMode()'>Changer de mode</button>
+            <p><b>Feature Information:</b></p>
             <div id="featureInfo"></div>
         </div>
         <script src="js/GUI/GuiTools.js"></script>
@@ -26,10 +25,10 @@
 
             
             var placement = {
-                coord: new itowns.Coordinates('EPSG:4326', 3.695885, 43.397379, 0),
-
-                range: 3000,
-                tilt: 55,
+                // coord: new itowns.Coordinates('EPSG:4326', -75.6114, 40.03428, 0),
+                coord: new itowns.Coordinates('EPSG:4326', 3.673728, 43.403493, 0),
+                range: 4000,
+                tilt: 22,
                 heading: 180
             }
             // iTowns namespace defined here
@@ -55,10 +54,10 @@
             }
             // Create a new Layer 3d-tiles For DiscreteLOD
             // -------------------------------------------
-            var $3dTilesLayerSetePC = new itowns.C3DTilesLayer('3d-tiles-sete', {
-                name: 'SetePC',
+            var $3dTilesLayerDiscreteLOD = new itowns.C3DTilesLayer('3d-tiles-discrete-lod', {
+                name: 'DiscreteLOD',
                 sseThreshold: 0.05,
-                pntsMode: "classification",
+                pntsMode: "CLASSIfication",
                 onTileContentLoaded: updatePointCloudSize,
                 source: new itowns.C3DTilesSource({
                     // url: 'https://10.1.23.22/data/3dtiles/pnts-sete-2021-0756_6256/tileset.json',
@@ -67,59 +66,44 @@
             }, view);
 
 
+          
 
+            itowns.View.prototype.addLayer.call(view, $3dTilesLayerDiscreteLOD);
 
-            itowns.View.prototype.addLayer.call(view, $3dTilesLayerSetePC);
+            // Create a new Layer 3d-tiles For Viewer Request Volume
+            // -----------------------------------------------------
 
-        
+            var $3dTilesLayerRequestVolume = new itowns.C3DTilesLayer('3d-tiles-request-volume', {
+                name: 'RequestVolume',
+                source: new itowns.C3DTilesSource({
+                    url: 'https://raw.githubusercontent.com/CesiumGS/3d-tiles-samples/master/1.0/TilesetWithRequestVolume/tileset.json',
+                }),
+                sseThreshold: 1,
+            }, view);
+
+            // add an event for picking the 3D Tiles layer and displaying
+            // information about the picked feature in an html div
+            var pickingArgs = {};
+            pickingArgs.htmlDiv = document.getElementById('featureInfo');
+            pickingArgs.view = view;
+            pickingArgs.layer = $3dTilesLayerRequestVolume;
+            itowns.View.prototype.addLayer.call(view,
+                $3dTilesLayerRequestVolume).then(function _() {
+                    window.addEventListener('mousemove',
+                        (event) => fillHTMLWithPickingInfo(event, pickingArgs),false);
+                });
+
             // Add the UI Debug
             var d = new debug.Debug(view, menuGlobe.gui);
             debug.createTileDebugUI(menuGlobe.gui, view, view.tileLayer, d);
-            debug.create3dTilesDebugUI(menuGlobe.gui, view, $3dTilesLayerSetePC, d);
+            debug.create3dTilesDebugUI(menuGlobe.gui, view, $3dTilesLayerDiscreteLOD, d);
+            debug.create3dTilesDebugUI(menuGlobe.gui, view, $3dTilesLayerRequestVolume, d);
             d.zoom = function() {
-                console.log( view.camera.camera3D.position)
-                console.log( view.camera.camera3D.quaternion)
-
-                view.camera.camera3D.position.set(4632627.4, 299475.6, 4362245.3);
-                view.camera.camera3D.quaternion.set(-0.04861777746431075, 0.03926069487010074, -0.6861524885817469, 0.7247687023911996);
+                view.camera.camera3D.position.set(1215013.9, -4736315.5, 4081597.5);
+                view.camera.camera3D.quaternion.set(0.9108514448729665, 0.13456816437801225, 0.1107206134840362, 0.3741416847378546);
                 view.notifyChange(view.camera.camera3D);
             }
             menuGlobe.gui.add(d, 'zoom').name('Go to point cloud');
-
-            
-
-function switchMode(){
-    // let pntsLayer = itownsViewer.getLayers(layer => layer.name === id.split("_pnts")[0]);
-    let pntsLayer = view.getLayerById("3d-tiles-sete");
-    
-    if(pntsLayer){
-        pntsLayer = pntsLayer;
-        pntsLayer.pntsMode = pntsLayer.pntsMode == itowns.PNTS_MODE.COLOR ? itowns.PNTS_MODE.CLASSIFICATION : itowns.PNTS_MODE.COLOR;
-        view.notifyChange(view.camera.camera3D);
-    }
-}
-
-function initPntsButton (){
-    for(var pnts_cloud of POINT_CLOUD_NAMES){
-        let layerSpan = $("[title='" + pnts_cloud + "']");
-        let cloudId = pnts_cloud + "_pnts";
-        if(layerSpan && layerSpan.parent().children(".ptnsmode-radio").length < 1){
-            layerSpan.before("<button type='button' id='"+cloudId+"' class='ptnsmode-radio icon icon_theme btn-no-bckgrnd ng-scope' title='Changer de mode' onclick='switchMode(this.id)' ng-mousedown='$event.stopPropagation()'></button>");
-            $(".bl-controls .ptnsmode-radio").css ({
-                'cursor': 'pointer',
-                'width': '24px',
-                'text-align': 'center',
-                'color': '#7790a1',
-                'font-size': '18px',
-                'font-weight': 'normal',
-                'margin': 0,
-                'display': 'inline-block',
-                'line-height': 1,
-                
-            });
-        }
-    }
-}
         </script>
     </body>
 </html>

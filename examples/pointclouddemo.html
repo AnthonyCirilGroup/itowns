@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Itowns - 3d-tiles example</title>
+
+        <meta charset="UTF-8">
+        <link rel="stylesheet" type="text/css" href="css/example.css">
+        <link rel="stylesheet" type="text/css" href="css/LoadingScreen.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>
+    </head>
+    <body>
+        <div id="viewerDiv"></div>
+        <div id="description">
+            <!-- <p><b>Feature Information:</b></p> -->
+            <button title='Changer de mode' onclick='switchMode()'>Changer de mode</button>
+            <div id="featureInfo"></div>
+        </div>
+        <script src="js/GUI/GuiTools.js"></script>
+        <script src="../dist/itowns.js"></script>
+        <script src="js/GUI/LoadingScreen.js"></script>
+        <script src="../dist/debug.js"></script>
+        <script src="js/3dTilesHelper.js"></script>
+        <script type="text/javascript">var THREE=itowns.THREE;</script>
+
+        
+        <script src="https://unpkg.com/three@0.129.0/examples/js/loaders/GLTFLoader.js"></script>
+        <script type="text/javascript">
+            /* global itowns,document,GuiTools*/
+
+            
+          
+             
+            var placement = {
+                coord: new itowns.Coordinates('EPSG:4326', 4.57918, 50.837789),
+                // range: 3000,
+                range: 10000000,
+                tilt: 90,
+            };
+            // iTowns namespace defined here
+            var viewerDiv = document.getElementById('viewerDiv');
+
+            var view = new itowns.GlobeView(viewerDiv, placement);
+            view.camera.camera3D.near = 5;
+            setupLoadingScreen(viewerDiv, view);
+
+            var menuGlobe = new GuiTools('menuDiv', view, 300);
+
+            
+            var ambLight = new itowns.THREE.AmbientLight(0xffffff, 0.2);
+            view.scene.add( ambLight );
+
+            // Add one imagery layer to the scene
+         /*   itowns.Fetcher.json('./layers/JSONLayers/Ortho.json').then(function _(config) {
+                    config.source = new itowns.WMTSSource(config.source);
+                    var layer = new itowns.ColorLayer('Ortho', config);
+                    view.addLayer(layer).then(menuGlobe.addLayerGUI.bind(menuGlobe));
+            });*/
+
+            itowns.Fetcher.json('./layers/JSONLayers/OPENSM.json').then(function _(config) {
+                config.source = new itowns.TMSSource(config.source);
+                var layer = new itowns.ColorLayer('Ortho', config);
+                view.addLayer(layer).then(menuGlobe.addLayerGUI.bind(menuGlobe));
+            });
+            function updatePointCloudSize(tileContent) {
+                tileContent.traverse(function (obj) {
+                    if (obj.isPoints) {
+                        obj.material.size = 3.0;
+                    }
+                });
+            }
+            // Create a new Layer 3d-tiles For DiscreteLOD
+            // -------------------------------------------
+            var $3dTilesLayerSetePC = new itowns.C3DTilesLayer('3d-tiles-sete', {
+                name: 'SetePC',
+                sseThreshold: 0.05,
+                pntsMode: "classification",
+                onTileContentLoaded: updatePointCloudSize,
+                source: new itowns.C3DTilesSource({
+                    // url: 'https://10.1.23.22/data/3dtiles/pnts-sete-2021-0756_6256/tileset.json',
+                    url: '../pnts-sete-2021-0756_6256/tileset.json',
+                }),
+            }, view);
+
+
+
+
+            itowns.View.prototype.addLayer.call(view, $3dTilesLayerSetePC);
+
+        
+            // Add the UI Debug
+            var d = new debug.Debug(view, menuGlobe.gui);
+            debug.createTileDebugUI(menuGlobe.gui, view, view.tileLayer, d);
+            debug.create3dTilesDebugUI(menuGlobe.gui, view, $3dTilesLayerSetePC, d);
+            d.zoom = function() {
+                console.log( view.camera.camera3D.position)
+                console.log( view.camera.camera3D.quaternion)
+
+                view.camera.camera3D.position.set(4632627.4, 299475.6, 4362245.3);
+                view.camera.camera3D.quaternion.set(-0.04861777746431075, 0.03926069487010074, -0.6861524885817469, 0.7247687023911996);
+                view.notifyChange(view.camera.camera3D);
+            }
+            menuGlobe.gui.add(d, 'zoom').name('Go to point cloud');
+
+            
+
+        function switchMode(){
+            let pntsLayer = view.getLayerById("3d-tiles-sete");
+            
+            if(pntsLayer){
+                pntsLayer = pntsLayer;
+                pntsLayer.pntsMode = pntsLayer.pntsMode == itowns.PNTS_MODE.COLOR ? itowns.PNTS_MODE.CLASSIFICATION : itowns.PNTS_MODE.COLOR;
+                view.notifyChange(view.camera.camera3D);
+            }
+        }
+        
+            //Tree    
+            const trunkRadius = 5;
+            const trunkHeight = 20;
+            const topHeight = 10;
+
+            function makeTree() {
+                const root = new THREE.Object3D();
+
+                // Trunk
+                const geometry = new THREE.CylinderGeometry( trunkRadius, trunkRadius, trunkHeight, 32 );
+                const material = new THREE.MeshPhongMaterial( {color: 0x8B4513} );
+                const trunk = new THREE.Mesh( geometry, material );
+                trunk.rotateX(Math.PI / 2);
+                trunk.position.z = 10 ;
+                trunk.updateMatrix();
+                root.add(trunk);
+
+                // Canopy
+                const geometryCanop = new THREE.SphereGeometry( topHeight, topHeight, 10 );
+                const materialCanop = new THREE.MeshPhongMaterial( { color: 0x00aa00 } );
+                const top = new THREE.Mesh( geometryCanop, materialCanop );
+                top.position.z = trunkHeight - (topHeight / 3) + 10;
+                top.updateMatrix();
+                root.add(top);
+
+                return root;
+            }
+            
+          
+
+
+            // Load a gltf model
+            // Instantiate a loader
+            const loader = new THREE.GLTFLoader();
+                        
+          
+
+ // ---------- DISPLAY VECTOR TILED BUILDING DATA AS 3D MESHES : ----------
+
+            // Define the source of the building data : those are vector tiled data from the geoportail.
+            const buildingsSource = new itowns.VectorTilesSource({
+                style: 'https://wxs.ign.fr/essentiels/static/vectorTiles/styles/PLAN.IGN/standard.json',
+                // We only want to display buildings related data.
+                filter: (layer) => {
+                    return layer['source-layer'].includes('bati_surf')
+                        && layer.paint["fill-color"];
+                },
+            });
+
+            // Create a FeatureGeometryLayer to support building data.
+            var buildingsLayer = new itowns.FeatureGeometryLayer('VTBuilding',{
+                source: buildingsSource,
+                zoom: { min: 15 },
+                accurate: false,
+                style: new itowns.Style({
+                    fill: {
+                        base_altitude: (p) => p.alti_sol || 0,
+                        extrusion_height: (p) => p.hauteur || 0,
+                    }
+                })
+            });
+
+            // Add the FeatureGeometryLayer to the scene and to the debug menu.
+            view.addLayer(buildingsLayer).then((layer) => {
+                const gui = debug.GeometryDebug.createGeometryDebugUI(menuGlobe.gui, view, layer);
+                debug.GeometryDebug.addWireFrameCheckbox(gui, view, layer);
+            })
+
+
+
+            // Lights
+            var lightsSource = new itowns.FileSource({
+                    // url: './layers/JSONLayers/point lumineux bordeaux 2019.geojson',
+                    url: './layers/JSONLayers/points_lumineux_bordeaux.geojson',
+                    crs: 'EPSG:4326',
+                    fetcher: itowns.Fetcher.json,
+                    parser: itowns.GeoJsonParser.parse,
+                });
+
+            // Load a glTF resource
+            loader.load(
+                // resource URL
+                '../data/lampadaire/scene.gltf',
+
+                // called when the resource is loaded
+                (gltf) => {
+                    var model = gltf.scene;
+
+                    model.rotateX(Math.PI/2.0);
+                    gltf.scene.position.z = 10 ;
+                    // model.scale.set(12, 12, 12);
+                    model.scale.set(6, 6, 6);
+                            
+                var styleModel3D = new itowns.Style({
+                    model: { object: model  }
+                });
+
+                
+                var lightsLayer = new itowns.FeatureGeometryLayer('lights', {
+                    name: 'lights',
+                    source: lightsSource,
+                    zoom: { min: 7, max : 21},
+                    style:  styleModel3D
+                });
+
+                view.addLayer(lightsLayer);
+
+
+                },
+                
+                // called while loading is progressing
+                (xhr) => {
+                    console.log(`${xhr.loaded / xhr.total * 100}% loaded`);
+                },
+
+                // called when loading has errors
+                (error) => {
+                    console.log('An error happened :');
+                    console.log(error);
+                },
+            ); 
+            
+            //Tree
+            var styleModel3D = new itowns.Style({
+                        model : { object : makeTree() }
+                });
+
+
+
+            var treesSource = new itowns.FileSource({
+                // url: './layers/JSONLayers/trees.geojson',
+                url: './layers/JSONLayers/arbres_bordeaux.geojson',
+                crs: 'EPSG:4326',
+                fetcher: itowns.Fetcher.json,
+                parser: itowns.GeoJsonParser.parse,
+            });
+
+            var treesLayer = new itowns.FeatureGeometryLayer('trees', {
+                name: 'trees',
+                source: treesSource,
+                zoom: { min: 7, max : 21},
+                style:  styleModel3D
+            });
+
+            view.addLayer(treesLayer);
+
+        
+
+        </script>
+    </body>
+</html>
