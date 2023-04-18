@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Itowns - 3d-tiles example</title>
+
+        <meta charset="UTF-8">
+        <link rel="stylesheet" type="text/css" href="css/example.css">
+        <link rel="stylesheet" type="text/css" href="css/LoadingScreen.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>
+    </head>
+    <body>
+        <div id="viewerDiv"></div>
+        <div id="description">
+            <p><b>Feature Information:</b></p>
+            <div id="featureInfo"></div>
+        </div>
+        <script src="js/GUI/GuiTools.js"></script>
+        <script src="../dist/itowns.js"></script>
+        <script src="js/GUI/LoadingScreen.js"></script>
+        <script src="../dist/debug.js"></script>
+        <script src="js/3dTilesHelper.js"></script>
+        <script type="text/javascript">
+            /* global itowns,document,GuiTools*/
+
+            
+            var placement = {
+                coord: new itowns.Coordinates('EPSG:4326', 3.695885, 43.397379, 0),
+
+                range: 3000,
+                tilt: 55,
+                heading: 180
+            }
+            // iTowns namespace defined here
+            var viewerDiv = document.getElementById('viewerDiv');
+
+            var view = new itowns.GlobeView(viewerDiv, placement);
+            view.camera.camera3D.near = 5;
+            setupLoadingScreen(viewerDiv, view);
+
+            var menuGlobe = new GuiTools('menuDiv', view, 300);
+
+            itowns.Fetcher.json('./layers/JSONLayers/OPENSM.json').then(function _(config) {
+                config.source = new itowns.TMSSource(config.source);
+                var layer = new itowns.ColorLayer('Ortho', config);
+                view.addLayer(layer).then(menuGlobe.addLayerGUI.bind(menuGlobe));
+            });
+            function updatePointCloudSize(tileContent) {
+                tileContent.traverse(function (obj) {
+                    if (obj.isPoints) {
+                        obj.material.size = 3.0;
+                    }
+                });
+            }
+            // Create a new Layer 3d-tiles For DiscreteLOD
+            // -------------------------------------------
+            var $3dTilesLayerSetePC = new itowns.C3DTilesLayer('3d-tiles-sete', {
+                name: 'SetePC',
+                sseThreshold: 0.05,
+                pntsMode: "classification",
+                onTileContentLoaded: updatePointCloudSize,
+                source: new itowns.C3DTilesSource({
+                    // url: 'https://10.1.23.22/data/3dtiles/pnts-sete-2021-0756_6256/tileset.json',
+                    url: '../pnts-sete-2021-0756_6256/tileset.json',
+                }),
+            }, view);
+
+
+            itowns.View.prototype.addLayer.call(view, $3dTilesLayerSetePC);
+
+        
+            // Add the UI Debug
+            var d = new debug.Debug(view, menuGlobe.gui);
+            debug.createTileDebugUI(menuGlobe.gui, view, view.tileLayer, d);
+            debug.create3dTilesDebugUI(menuGlobe.gui, view, $3dTilesLayerSetePC, d);
+            d.zoom = function() {
+                console.log( view.camera.camera3D.position)
+                console.log( view.camera.camera3D.quaternion)
+
+                view.camera.camera3D.position.set(4632627.4, 299475.6, 4362245.3);
+                view.camera.camera3D.quaternion.set(-0.04861777746431075, 0.03926069487010074, -0.6861524885817469, 0.7247687023911996);
+                view.notifyChange(view.camera.camera3D);
+            }
+            menuGlobe.gui.add(d, 'zoom').name('Go to point cloud');
+        </script>
+    </body>
+</html>
