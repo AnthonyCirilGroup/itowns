@@ -180,6 +180,8 @@ let previous;
  * @property      {boolean} enableDamping Enable damping or not (simulates the lag that a real camera
  * operator introduces while operating a heavy physical camera). Default is true.
  * @property      {boolean} dampingMoveFactor the damping move factor. Default is 0.25.
+ * @property      {number}  zoomout_interp Zoom out interpolation factor.
+ * @property      {number}  zoomin_interp Zoom in interpolation factor.
  */
 class GlobeControls extends THREE.EventDispatcher {
     constructor(view, placement, options = {}) {
@@ -239,6 +241,11 @@ class GlobeControls extends THREE.EventDispatcher {
         // Set collision options
         this.handleCollision = typeof (options.handleCollision) !== 'undefined' ? options.handleCollision : true;
         this.minDistanceCollision = 60;
+
+        // Zoom interpolation factor
+        this.zoomin_interp = options.zoomin_interp || 0.88;
+        this.zoomout_interp = options.zoomout_interp || 1.05;
+
 
         // this.enableKeys property has moved to StateControl
         Object.defineProperty(this, 'enableKeys', {
@@ -763,13 +770,9 @@ class GlobeControls extends THREE.EventDispatcher {
         this.player.stop();
         CameraUtils.stop(this.view, this.camera);
 
-        const dezoom_interp = 1.05;    // Interpolation factor used to unzoom
-
         var point = this.view.getPickingPositionFromDepth(event.viewCoords);        // position de la souris
         this.view.getPickingPositionFromDepth(null, pickedPosition);
         var range = this.getRange(pickedPosition);
-        const alpha = range > 1000000 ? 0.87 : 0.9;  //  Interpolation factor used to zoom
-
 
         range *= (event.delta > 0 ? 1 / 0.9 : 0.9);
 
@@ -787,7 +790,7 @@ class GlobeControls extends THREE.EventDispatcher {
 
             point.lerp(  // point interpol between mouse curosr and cam pos
                 camPos,
-                (event.delta > 0 ? dezoom_interp : alpha), // interpol factor
+                (event.delta > 0 ? this.zoomout_interp : this.zoomin_interp), // interpol factor
             );
 
 
