@@ -13,6 +13,12 @@
     uniform int         elevationTextureCount;
     uniform float       geoidHeight;
 
+    const float PackUpscale = 256. / 255.; // fraction -> 0..1 (including 1)
+    const float UnpackDownscale = 255. / 256.; // 0..1 -> fraction (excluding 1)
+
+    const vec3 PackFactors = vec3( 256. * 256. * 256., 256. * 256.,  256. );
+    const vec4 UnpackFactors = UnpackDownscale / vec4( PackFactors, 1. );
+
     highp float decode32(highp vec4 rgba) {
         highp float Sign = 1.0 - step(128.0,rgba[0])*2.0;
         highp float Exponent = 2.0 * mod(rgba[0],128.0) + step(128.0,rgba[1]) - 127.0;
@@ -21,9 +27,35 @@
         return Result;
     }
 
+
+    
+    highp float decodeMPRGB(highp vec3 rgb) {
+        if(rgb == vec3(0.0, 0.0, 0.0))
+            return 0.0;
+       highp float Result =  -10000.0 + ((rgb[0] * 256.0 * 256.0 + rgb[1] * 256.0 + rgb[2]) * 0.1);
+       return Result;
+    }
+
+
+
+
+    float unpackRGBAToDepth( const in vec4 v ) {
+        return dot( v, UnpackFactors );
+    }
+
+
+
     float getElevationMode(vec2 uv, sampler2D tex, int mode) {
         if (mode == ELEVATION_RGBA)
-            return decode32(texture2D( tex, uv ).abgr * 255.0);
+                // return decodeMPRGB(texture2D( tex, uv ).rgba );
+                return decodeMPRGB(texture2D( tex, uv ).rgb * 255.0);   //working
+                // return texture2D( tex, uv ).g;
+                            // return texture2D( tex, uv ).g * 255.0;
+// return unpackRGBAToDepth(texture2D( tex, uv ).rgba * 255.0);
+
+            // return unpackRGBAToDepth(texture2D( tex, uv ).abgr * 255.0);
+            // return unpackRGBAToDepth(texture2D( tex, uv ).abgr * 255.0);
+            // return decode32(texture2D( tex, uv ).abgr * 255.0);
         if (mode == ELEVATION_DATA || mode == ELEVATION_COLOR)
         #if defined(WEBGL2)
             return texture2D( tex, uv ).r;
@@ -32,10 +64,15 @@
         #endif
         return 0.;
     }
+//  * elevation = color.r * (this.colorTextureElevationMaxZ - this.colorTextureElevationMinZ) + this.colorTextureElevationMinZ
+
 
     float getElevation(vec2 uv, sampler2D tex, vec4 offsetScale, Layer layer) {
         uv = uv * offsetScale.zw + offsetScale.xy;
-        float d = clamp(getElevationMode(uv, tex, layer.mode), layer.zmin, layer.zmax);
-        return d * layer.scale + layer.bias;
+        // float d = clamp(getElevationMode(uv, tex, layer.mode), layer.zmin , layer.zmax);
+        // if (mode == ELEVATION_RGBA)
+        float d = getElevationMode(uv, tex, layer.mode);
+        // return d * layer.scale + layer.bias;
+        return d * layer.scale;
     }
 #endif

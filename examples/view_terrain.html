@@ -1,0 +1,221 @@
+<html>
+    <head>
+        <title>Itowns - Globe</title>
+
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <link rel="stylesheet" type="text/css" href="css/example.css" />
+        <link rel="stylesheet" type="text/css" href="css/LoadingScreen.css" />
+        <link rel="stylesheet" type="text/css" href="css/widgets.css" />
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>
+    </head>
+    <body>
+        <div id="viewerDiv"></div>
+
+        <!-- Import iTowns source code -->
+        <script src="../dist/itowns.js"></script>
+        <script src="../dist/debug.js"></script>
+        <!-- Import iTowns Widgets plugin -->
+        <script src="../dist/itowns_widgets.js"></script>
+        <!-- Import iTowns LoadingScreen and GuiTools plugins -->
+        <script src="js/GUI/GuiTools.js"></script>
+        <script src="js/GUI/LoadingScreen.js"></script>
+
+        <script type="text/javascript">
+            // ---------- CREATE A GlobeView FOR SUPPORTING DATA VISUALIZATION : ----------
+
+            // Define camera initial position
+            // const placement = {
+            //     coord: new itowns.Coordinates("EPSG:4326", 2.351323, 48.856712),
+            //     range: 25000000,
+            // };
+
+            var extent = new itowns.Extent(
+                "EPSG:4326",
+                5.18,
+                45.437,
+                46.03,
+                4.568
+            );
+
+            var placement = {
+                coord: new itowns.Coordinates("EPSG:4326", 4.838, 45.756),
+                range: 10000,
+            };
+            // var extent = new itowns.Extent(
+            //     "EPSG:3946",
+            //     1837816.94334,
+            //     1847692.32501,
+            //     5170036.4587,
+            //     5178412.82698
+            // );
+
+            // // `viewerDiv` will contain iTowns' rendering area (`<canvas>`)
+            const viewerDiv = document.getElementById("viewerDiv");
+
+            // Create a GlobeView
+            const view = new itowns.GlobeView(viewerDiv, placement, {
+                handleCollision: true,
+            });
+            // const view = new itowns.PlanarView(viewerDiv, , {
+            //     placement,
+            // });
+
+            // Setup loading screen and debug menu
+            setupLoadingScreen(viewerDiv, view);
+            const debugMenu = new GuiTools("menuDiv", view);
+
+            // ---------- DISPLAY ORTHO-IMAGES : ----------
+
+            // Add one imagery layer to the scene. This layer's properties are defined in a json file, but it could be
+            // defined as a plain js object. See `Layer` documentation for more info.
+            itowns.Fetcher.json("./layers/JSONLayers/Ortho.json").then(
+                function _(config) {
+                    config.source = new itowns.WMTSSource(config.source);
+                    view.addLayer(new itowns.ColorLayer("Ortho", config)).then(
+                        debugMenu.addLayerGUI.bind(debugMenu)
+                    );
+                }
+            );
+
+            var wmsImagerySourced = new itowns.WMSSource({
+                extent: extent,
+                name: "Ortho2009_vue_ensemble_16cm_CC46",
+                url: "https://download.data.grandlyon.com/wms/grandlyon",
+                version: "1.3.0",
+                crs: "EPSG:4326",
+                format: "image/jpeg",
+            });
+
+            var wmsImageryLayerd = new itowns.ColorLayer("wms_imagery", {
+                updateStrategy: {
+                    type: itowns.STRATEGY_DICHOTOMY,
+                    options: {},
+                },
+                source: wmsImagerySourced,
+            });
+            // view.addLayer(wmsImageryLayerd);
+            // ---------- DISPLAY A DIGITAL ELEVATION MODEL : ----------
+
+            // Add two elevation layers, each with a different level of detail. Here again, each layer's properties are
+            // defined in a json file.
+            /* function addElevationLayerFromConfig(config) {
+                            config.source = new itowns.WMTSSource(config.source);
+                            view.addLayer(
+                                new itowns.ElevationLayer(config.id, config),
+                            ).then(debugMenu.addLayerGUI.bind(debugMenu));
+                        }
+                        itowns.Fetcher.json('./layers/JSONLayers/IGN_MNT_HIGHRES.json').then(addElevationLayerFromConfig);
+                        itowns.Fetcher.json('./layers/JSONLayers/WORLD_DTM.json').then(addElevationLayerFromConfig);
+
+            */
+
+            /*  const buildingsSource = new itowns.VectorTilesSource({
+                            style: "http://localhost:8000/services/outputrio",
+                            // We only want to display buildings related data.
+                        });*/
+
+            /*  const orthoSource = new itowns.TMSSource({
+                url: "http://localhost:8000/services/outputrio/tiles/${z}/${x}/${y}.png",
+                format: "image/png",
+                zoom: { min: 5, max: 15 },
+                // isInverted: true,
+                crs: "EPSG:4326",
+            });
+
+          
+            // Create the layer
+            const colorLayer = new itowns.ElevationLayer("terrrain", {
+                source: orthoSource,
+            });
+
+            // Add the layer
+            view.addLayer(colorLayer);*/
+            // 4.2155435209808907,45.4433781483030472 : 5.2088052552489117,46.3132428145239174
+            // Add a WMS imagery source
+            var wmsImagerySource = new itowns.WMSSource({
+                // extent: extent,
+                name: "terrain:output",
+                url: "http://localhost:8090/geoserver/terrain/wms",
+                // version: "1.3.0",
+                crs: "EPSG:4326",
+                format: "image/png",
+                // networkOptions: { crossOrigin: "anonymous" },
+
+                extent: {
+                    west: 4.21,
+                    east: 5.21,
+                    south: 45.447,
+                    north: 46.31,
+                },
+            });
+
+            // Add a WMS imagery layer
+            const wmsElevLayer = new itowns.ElevationLayer("terrrain", {
+                source: wmsImagerySource,
+                useRgbaTextureElevation: true,
+            });
+
+            // view.addLayer(wmsElevLayer);
+
+            const wmsImageryLayer = new itowns.ColorLayer("terrrainColor", {
+                source: wmsImagerySource,
+                // useRgbaTextureElevation: true,
+            });
+
+            // view.addLayer(wmsImageryLayer);
+            // debug.createTileDebugUI(debugMenu.gui, view, wmsImageryLayer);
+
+            const wmtsSource = new itowns.WMTSSource({
+                name: "terrain:output",
+                tileMatrixSet: "EPSG:4326",
+                crs: "EPSG:4326",
+                url: "http://localhost:8090/geoserver/gwc/service/wmts",
+                format: "image/png",
+                style: "raster",
+                zoom: {
+                    min: 5,
+                    max: 15,
+                },
+            });
+
+            // Create the layer
+            const terrrainwmts = new itowns.ElevationLayer("terrrainwmts", {
+                source: wmtsSource,
+                useRgbaTextureElevation: true,
+                noDataValue: null,
+                scale: 7,
+            });
+            // debug.createTileDebugUI(debugMenu.gui, view);
+
+            // Add the layer
+
+            view.addLayer(terrrainwmts);
+            debugMenu.addElevationLayerGUI(terrrainwmts);
+
+            // Create the layer
+            const terrrainwmtsCol = new itowns.ColorLayer("terrrainwmtsCol", {
+                source: wmtsSource,
+                // useRgbaTextureElevation: true,
+            });
+
+            view.addLayer(terrrainwmtsCol);
+
+            debug.createTileDebugUI(debugMenu.gui, view);
+
+            // Add the layer
+
+            // debugMenu.addImageryLayersGUI(wmsImageryLayer);
+
+            // ---------- ADD SOME WIDGETS : ----------
+
+            // ADD A SCALE :
+            const scale = new itowns_widgets.Scale(view, {
+                position: "bottom-right",
+                translate: { x: -80 },
+            });
+        </script>
+    </body>
+</html>

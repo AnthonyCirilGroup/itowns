@@ -143,7 +143,7 @@ export class RasterElevationTile extends RasterTile {
         if (layer.useRgbaTextureElevation) {
             defaultEle.mode = ELEVATION_MODES.RGBA;
             defaultEle.zmax = 5000;
-            throw new Error('Restore this feature');
+            // throw new Error('Restore this feature');
         } else if (layer.useColorTextureElevation) {
             this.scaleFactor = layer.colorTextureElevationMaxZ - layer.colorTextureElevationMinZ;
             defaultEle.mode = ELEVATION_MODES.COLOR;
