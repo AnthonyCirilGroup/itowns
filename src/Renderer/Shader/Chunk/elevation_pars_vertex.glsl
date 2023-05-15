@@ -28,15 +28,13 @@
     }
 
 
-    
+    //  Decode height when encoded using Mapbox formula: height = -10000 + ((R * 256 * 256 + G * 256 + B) * 0.1)
     highp float decodeMPRGB(highp vec3 rgb) {
         if(rgb == vec3(0.0, 0.0, 0.0))
             return 0.0;
-       highp float Result =  -10000.0 + ((rgb[0] * 256.0 * 256.0 + rgb[1] * 256.0 + rgb[2]) * 0.1);
+        highp float Result =  -10000.0 + ((rgb[0] * 256.0 * 256.0 + rgb[1] * 256.0 + rgb[2]) * 0.1);
        return Result;
     }
-
-
 
 
     float unpackRGBAToDepth( const in vec4 v ) {
@@ -47,15 +45,8 @@
 
     float getElevationMode(vec2 uv, sampler2D tex, int mode) {
         if (mode == ELEVATION_RGBA)
-                // return decodeMPRGB(texture2D( tex, uv ).rgba );
-                return decodeMPRGB(texture2D( tex, uv ).rgb * 255.0);   //working
-                // return texture2D( tex, uv ).g;
-                            // return texture2D( tex, uv ).g * 255.0;
-// return unpackRGBAToDepth(texture2D( tex, uv ).rgba * 255.0);
-
-            // return unpackRGBAToDepth(texture2D( tex, uv ).abgr * 255.0);
-            // return unpackRGBAToDepth(texture2D( tex, uv ).abgr * 255.0);
-            // return decode32(texture2D( tex, uv ).abgr * 255.0);
+            return decodeMPRGB(texture2D( tex, uv ).rgb * 255.0); 
+          
         if (mode == ELEVATION_DATA || mode == ELEVATION_COLOR)
         #if defined(WEBGL2)
             return texture2D( tex, uv ).r;
@@ -64,15 +55,14 @@
         #endif
         return 0.;
     }
-//  * elevation = color.r * (this.colorTextureElevationMaxZ - this.colorTextureElevationMinZ) + this.colorTextureElevationMinZ
 
 
     float getElevation(vec2 uv, sampler2D tex, vec4 offsetScale, Layer layer) {
         uv = uv * offsetScale.zw + offsetScale.xy;
-        // float d = clamp(getElevationMode(uv, tex, layer.mode), layer.zmin , layer.zmax);
-        // if (mode == ELEVATION_RGBA)
         float d = getElevationMode(uv, tex, layer.mode);
-        // return d * layer.scale + layer.bias;
-        return d * layer.scale;
+        if (layer.mode == ELEVATION_RGBA)
+            return d * layer.scale;        
+        d = clamp(d, layer.zmin , layer.zmax);            
+        return d * layer.scale + layer.bias;
     }
 #endif
