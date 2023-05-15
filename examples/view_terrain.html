@@ -117,7 +117,7 @@
                             // We only want to display buildings related data.
                         });*/
 
-            /*  const orthoSource = new itowns.TMSSource({
+            const orthoSource = new itowns.TMSSource({
                 url: "http://localhost:8000/services/outputrio/tiles/${z}/${x}/${y}.png",
                 format: "image/png",
                 zoom: { min: 5, max: 15 },
@@ -125,14 +125,16 @@
                 crs: "EPSG:4326",
             });
 
-          
             // Create the layer
-            const colorLayer = new itowns.ElevationLayer("terrrain", {
+            const ElevatLayer = new itowns.ElevationLayer("terrrain", {
                 source: orthoSource,
+                useRgbaTextureElevation: true,
+                noDataValue: null,
+                scale: 7,
             });
 
             // Add the layer
-            view.addLayer(colorLayer);*/
+            // view.addLayer(ElevatLayer);
             // 4.2155435209808907,45.4433781483030472 : 5.2088052552489117,46.3132428145239174
             // Add a WMS imagery source
             var wmsImagerySource = new itowns.WMSSource({
@@ -171,6 +173,7 @@
             const wmtsSource = new itowns.WMTSSource({
                 name: "terrain:output",
                 tileMatrixSet: "EPSG:4326",
+                tileMatrixCallback: (zoomLevel) => "EPSG:4326:" + zoomLevel,
                 crs: "EPSG:4326",
                 url: "http://localhost:8090/geoserver/gwc/service/wmts",
                 format: "image/png",
@@ -186,6 +189,7 @@
                 source: wmtsSource,
                 useRgbaTextureElevation: true,
                 noDataValue: null,
+
                 scale: 7,
             });
             // debug.createTileDebugUI(debugMenu.gui, view);
@@ -193,7 +197,7 @@
             // Add the layer
 
             view.addLayer(terrrainwmts);
-            debugMenu.addElevationLayerGUI(terrrainwmts);
+            // debugMenu.addElevationLayerGUI(terrrainwmts);
 
             // Create the layer
             const terrrainwmtsCol = new itowns.ColorLayer("terrrainwmtsCol", {

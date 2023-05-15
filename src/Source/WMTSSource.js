@@ -80,19 +80,7 @@ class WMTSSource extends TMSSource {
             this.url = `${this.url}?`;
         }
 
-
-        if (source.name == 'terrain:output') {
-            this.url = `${this.url}` +
-                `LAYER=${source.name}` +
-                `&FORMAT=${this.format}` +
-                '&SERVICE=WMTS' +
-                `&VERSION=${source.version || '1.0.0'}` +
-                '&REQUEST=GetTile' +
-                `&STYLE=${source.style || 'normal'}` +
-                `&TILEMATRIXSET=${source.tileMatrixSet}` +
-                `&TILEMATRIX=${source.tileMatrixSet}:%TILEMATRIX&TILEROW=%ROW&TILECOL=%COL`;
-        } else {
-            this.url = `${this.url}` +
+        this.url = `${this.url}` +
             `LAYER=${source.name}` +
             `&FORMAT=${this.format}` +
             '&SERVICE=WMTS' +
@@ -101,7 +89,6 @@ class WMTSSource extends TMSSource {
             `&STYLE=${source.style || 'normal'}` +
             `&TILEMATRIXSET=${source.tileMatrixSet}` +
             '&TILEMATRIX=%TILEMATRIX&TILEROW=%ROW&TILECOL=%COL';
-        }
 
         this.vendorSpecific = source.vendorSpecific;
         for (const name in this.vendorSpecific) {
