@@ -86,7 +86,9 @@ export default function createTileDebugUI(datDebugTool, view, layer, debugInstan
 
     // dynamic tiles opacity
     gui.add(layer, 'dynamicOpacity').name('Dynamic opacity').onChange(() => {
-        view.setUndergroundVisualization(layer.dynamicOpacity);
+        // view.setUndergroundVisualization(layer.dynamicOpacity);
+        layer.undergroundVisualisation = layer.dynamicOpacity;
+        view.notifyChange(layer);
     });
 
     // tiles wireframe

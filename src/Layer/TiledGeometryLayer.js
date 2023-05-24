@@ -8,6 +8,7 @@ import { SIZE_DIAGONAL_TEXTURE } from 'Process/LayeredMaterialNodeProcessing';
 import { ImageryLayers } from 'Layer/Layer';
 import { CACHE_POLICIES } from 'Core/Scheduler/Cache';
 import Coordinates from 'Core/Geographic/Coordinates';
+import CameraUtils from 'Utils/CameraUtils';
 
 
 const subdivisionVector = new THREE.Vector3();
@@ -114,6 +115,8 @@ class TiledGeometryLayer extends GeometryLayer {
         } else {
             this.altitudeForFullOpacity = config.altitudeForFullOpacity;
         }
+        this.undergroundVisualisation = config.undergroundVisualisation == true;
+
 
         this.updateTiledLayerOpacity = this._updateTiledLayerOpacity.bind(this);
     }
@@ -145,10 +148,15 @@ class TiledGeometryLayer extends GeometryLayer {
             return;
         }
         const view = event.target;
-        var cameraTargetPosition = event?.coord || view.controls.getLookAtCoordinate();
+        /* var cameraTargetPosition = event?.coord || view.controls.getLookAtCoordinate();
         var cameraTargetPosition2 = new Coordinates(cameraTargetPosition.crs, cameraTargetPosition);
         var cameraPosition = view.camera.position('EPSG:4978');
         const distance = cameraTargetPosition2.spatialEuclideanDistanceTo(cameraPosition);
+        console.log('distance');
+        console.log(distance);
+        console.log('range'); */
+        const distance = CameraUtils.getTransformCameraLookingAtTarget(view, view.controls.camera).range;
+
         this.opacity = THREE.MathUtils.clamp((distance - this.altitudeForZeroOpacity) / (this.altitudeForFullOpacity - this.altitudeForZeroOpacity), 0, 1);
     }
 
@@ -181,6 +189,28 @@ class TiledGeometryLayer extends GeometryLayer {
      * @return {TileMesh[]} The array of nodes to update.
      */
     preUpdate(context, sources) {
+        // console.log('what');
+
+        const atmo = context.view.getLayerById('atmosphere');
+        if (this.undergroundVisualisation) {
+            this.updateTiledLayerOpacity({ target: context.view });
+            this.hideSkirt = true;
+
+
+            if (atmo) {
+                context.view.scene.background = new THREE.Color(0x000000);
+                atmo.visible = false;
+            }
+        } else {
+            this.hideSkirt = false;
+
+            if (atmo) {
+                atmo.visible = true;
+            }
+            this.opacity = 1;
+        }
+
+
         if (sources.has(undefined) || sources.size == 0) {
             return this.level0Nodes;
         }
