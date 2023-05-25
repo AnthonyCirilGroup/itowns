@@ -148,15 +148,7 @@ class TiledGeometryLayer extends GeometryLayer {
             return;
         }
         const view = event.target;
-        /* var cameraTargetPosition = event?.coord || view.controls.getLookAtCoordinate();
-        var cameraTargetPosition2 = new Coordinates(cameraTargetPosition.crs, cameraTargetPosition);
-        var cameraPosition = view.camera.position('EPSG:4978');
-        const distance = cameraTargetPosition2.spatialEuclideanDistanceTo(cameraPosition);
-        console.log('distance');
-        console.log(distance);
-        console.log('range'); */
         const distance = CameraUtils.getTransformCameraLookingAtTarget(view, view.controls.camera).range;
-
         this.opacity = THREE.MathUtils.clamp((distance - this.altitudeForZeroOpacity) / (this.altitudeForFullOpacity - this.altitudeForZeroOpacity), 0, 1);
     }
 

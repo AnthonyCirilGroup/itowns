@@ -238,14 +238,6 @@ class View extends THREE.EventDispatcher {
             }
         });
 
-        // configure dynamic opacity
-
-        // this.undergroundVisualisation = options.undergroundVisualisation == true;
-
-        // if (this.undergroundVisualisation) {
-        //     this.setUndergroundVisualization(this.undergroundVisualisation);
-        // }
-
         // push all viewer to keep source.cache
         viewers.push(this);
     }
