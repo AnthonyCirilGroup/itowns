@@ -65,8 +65,7 @@
             const extensions = new itowns.C3DTExtensions();
 
             extensions.registerExtension("3DTILES_content_gltf", {
-                [itowns.C3DTilesTypes.batchtable]:
-                    itowns.C3DTBatchTableHierarchyExtension,
+                [itowns.C3DTilesTypes.batchtable]: itowns.C3DTGLTFExtension,
             });
 
             itowns.enableDracoLoader("./libs/draco/");
@@ -91,16 +90,16 @@
 
             // Add two elevation layers, each with a different level of detail. Here again, each layer's properties are
             // defined in a json file.
-            function addElevationLayerFromConfig(config) {
-                config.source = new itowns.WMTSSource(config.source);
-                view.addLayer(new itowns.ElevationLayer(config.id, config));
-            }
-            itowns.Fetcher.json("./layers/JSONLayers/WORLD_DTM.json").then(
-                addElevationLayerFromConfig
-            );
-            itowns.Fetcher.json(
-                "./layers/JSONLayers/IGN_MNT_HIGHRES.json"
-            ).then(addElevationLayerFromConfig);
+            // function addElevationLayerFromConfig(config) {
+            //     config.source = new itowns.WMTSSource(config.source);
+            //     view.addLayer(new itowns.ElevationLayer(config.id, config));
+            // }
+            // itowns.Fetcher.json("./layers/JSONLayers/WORLD_DTM.json").then(
+            //     addElevationLayerFromConfig
+            // );
+            // itowns.Fetcher.json(
+            //     "./layers/JSONLayers/IGN_MNT_HIGHRES.json"
+            // ).then(addElevationLayerFromConfig);
 
             // Create a new Layer 3d-tiles For Viewer Request Volume
             // -----------------------------------------------------

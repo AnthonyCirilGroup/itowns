@@ -5,6 +5,9 @@ import Fetcher from 'Provider/Fetcher';
 import ReferLayerProperties from 'Layer/ReferencingLayerProperties';
 import utf8Decoder from 'Utils/Utf8Decoder';
 
+import GLTFParser from 'Parser/GLTFParser';
+
+
 function b3dmToMesh(data, layer, url) {
     const urlBase = THREE.LoaderUtils.extractUrlBase(url);
     const options = {
@@ -24,6 +27,24 @@ function b3dmToMesh(data, layer, url) {
     });
 }
 
+function gltfoMesh(data, layer, url) {
+    const urlBase = THREE.LoaderUtils.extractUrlBase(url);
+    const options = {
+        gltfUpAxis: layer.tileset.asset.gltfUpAxis,
+        urlBase,
+        overrideMaterials: layer.overrideMaterials,
+        doNotPatchMaterial: layer.doNotPatchMaterial,
+        opacity: layer.opacity,
+        registeredExtensions: layer.registeredExtensions,
+        layer,
+    };
+    return GLTFParser.parse(data, options).then((result) => {
+        const batchTable = result.batchTable;
+        // object3d is actually a THREE.Scene
+        const object3d = batchTable.scene;
+        return { batchTable, object3d };
+    });
+}
 function pntsParse(data, layer) {
     return PntsParser.parse(data, layer.registeredExtensions).then((result) => {
         const material = layer.material ?
@@ -89,7 +110,7 @@ function executeCommand(command) {
             b3dm: b3dmToMesh,
             pnts: pntsParse,
         };
-        console.log(layer.source.networkOptions);
+        // console.log(layer.source.networkOptions);
         return Fetcher.arrayBuffer(url, layer.source.networkOptions).then((result) => {
             if (result !== undefined) {
                 let func;
@@ -103,7 +124,8 @@ function executeCommand(command) {
                 } else if (magic == 'pnts') {
                     func = supportedFormats.pnts;
                 } else {
-                    return Promise.reject(`Unsupported magic code ${magic}`);
+                    func =  gltfoMesh;
+                    // return Promise.reject(`Unsupported magic code ${magic}`);
                 }
                 if (func) {
                     // TODO: request should be delayed if there is a viewerRequestVolume
