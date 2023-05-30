@@ -10,10 +10,24 @@ function checkResponse(response) {
     }
 }
 
-const arrayBuffer = (url, options = {}) => fetch(url, options).then((response) => {
-    checkResponse(response);
-    return response.arrayBuffer();
-});
+
+
+var arrayBuffer = function (url) {
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    url = url.indexOf('?') > -1 ?  `${url}&key=${options.key}` : `${url}?session=SESSIONID&key=${options.key}`;
+    return fetch(url, options).then((response) => {
+        console.log(options);
+        checkResponse(response);
+        return response.arrayBuffer();
+    });
+};
+
+// const arrayBuffer = (url, options = {}) => fetch(url, options).then((response) => {
+//     console.log(options);
+
+//     checkResponse(response);
+//     return response.arrayBuffer();
+// });
 
 function getTextureFloat(buffer, isWebGL2 = true) {
     if (isWebGL2) {

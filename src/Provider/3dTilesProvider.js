@@ -81,6 +81,7 @@ function executeCommand(command) {
         obj.userData.metadata = metadata;
         obj.layer = layer;
     };
+    metadata.baseURL = 'https://tile.googleapis.com';
     if (path) {
         // Check if we have relative or absolute url (with tileset's lopocs for example)
         const url = path.startsWith('http') ? path : metadata.baseURL + path;
@@ -88,6 +89,7 @@ function executeCommand(command) {
             b3dm: b3dmToMesh,
             pnts: pntsParse,
         };
+        console.log(layer.source.networkOptions);
         return Fetcher.arrayBuffer(url, layer.source.networkOptions).then((result) => {
             if (result !== undefined) {
                 let func;

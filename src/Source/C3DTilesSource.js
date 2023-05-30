@@ -26,6 +26,10 @@ class C3DTilesSource extends Source {
         super(source);
         this.isC3DTilesSource = true;
         this.baseUrl = this.url.slice(0, this.url.lastIndexOf('/') + 1);
+        console.log(this.url);
+        console.log(this.baseUrl);
+        this.baseUrl =  'https://tile.googleapis.com/';
+        // this.url = 'https://tile.googleapis.com/v1/3dtiles';
         this.whenReady = Fetcher.json(this.url, this.networkOptions);
     }
 }
