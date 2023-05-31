@@ -103,6 +103,17 @@ class TiledGeometryLayer extends GeometryLayer {
         }));
         // configure dynamic opacity
 
+        let _hideSkirt = this.hideSkirt;
+
+
+        Object.defineProperty(this, 'hideSkirt', {
+            get: () => _hideSkirt,
+            set: (value) => {
+                _hideSkirt = value;
+                this.#hideExistingSkirt(value);
+            },
+        });
+
         if (config.altitudeForZeroOpacity === undefined || config.altitudeForZeroOpacity === null) {
             this.altitudeForZeroOpacity = 420;
         } else {
@@ -294,6 +305,22 @@ class TiledGeometryLayer extends GeometryLayer {
         this.info.update(node);
         return ObjectRemovalHelper.removeChildren(this, node);
     }
+
+    #hideExistingSkirt(value) {
+        for (const node of this.level0Nodes) {
+            node.traverse((obj) => {
+                if (obj.isTileMesh) {
+                    if (value) {
+                        obj.geometry.setDrawRange(0, this.segments * this.segments * 2 * 3);  //  bufferIndex = (nSeg) * (nSeg) * 2 * 3 (computeBufferTileGeometry.js)
+                    } else {
+                        obj.geometry.setDrawRange(0, Infinity);
+                    }
+                }
+            });
+        }
+    }
+
+
 
     convert(requester, extent) {
         return convertToTile.convert(requester, extent, this);
