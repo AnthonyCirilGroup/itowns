@@ -59,6 +59,16 @@ class TileMesh extends THREE.Mesh {
                 }
             },
         });
+
+
+
+
+
+        this._hideExistingSkirt = this.#hideExistingSkirt.bind(this);
+        this._disposeEvent = this.disposeEvent.bind(this);
+
+        // this.layer.addEventListener('skirt-changed', this._hideExistingSkirt, false);
+        // this.addEventListener('dispose', this._disposeEvent, false);
     }
     /**
      * If specified, update the min and max elevation of the OBB
@@ -109,13 +119,48 @@ class TileMesh extends THREE.Mesh {
         }
     }
 
-    onBeforeRender() {
-        /*     if (this.layer.hideSkirt) {
+    // hideskirt
+    #hideExistingSkirt(e) {
+        /* if (this.layer.hideSkirt) {
             this.geometry.setDrawRange(0, this.layer.segments * this.layer.segments * 2 * 3);  //  bufferIndex = (nSeg) * (nSeg) * 2 * 3 (computeBufferTileGeometry.js)
         } else if (this.layer.hideSkirt == false && this.geometry.drawRange.count != Infinity) {
             this.geometry.setDrawRange(0, Infinity);
+        } */
+        // const layer = e.target;
+
+        const layer = this.layer;
+
+
+        if (e.value) {
+            this.geometry.setDrawRange(0, layer.segments * layer.segments * 2 * 3);  //  bufferIndex = (nSeg) * (nSeg) * 2 * 3 (computeBufferTileGeometry.js)
+        } else {
+            this.geometry.setDrawRange(0, Infinity);
         }
-    */
+    }
+    disposeEvent(e) {
+        // console.log(e.target.layer);
+        // this.removeEventListener('dispose', this._disposeEvent, false);
+
+        e.target.layer.removeEventListener('skirt-changed', this._hideExistingSkirt, false);
+    }
+    // dispose(e) {
+    //     console.log('layer');
+    //     console.log(this.layer);
+    //     console.log('e');
+    //     console.log(e);
+
+    //     if (!this.layer) {
+    //         // debugger;
+    //     }
+    // }
+
+    // dispose(removeEvent) {
+    //     // this.layer.dispose();
+    //     if (removeEvent) {
+    //         this.layer.removeEventListener('skirt-changed', this._hideExistingSkirt, false);
+    //     }
+    // }
+    onBeforeRender() {
         if (this.material.layersNeedUpdate) {
             this.material.updateLayersUniforms();
         }
