@@ -11,6 +11,7 @@
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>
     </head>
+
     <body>
         <div id="viewerDiv"></div>
 
@@ -102,39 +103,68 @@
             // Add two elevation layers, each with a different level of detail. Here again, each layer's properties are
             // defined in a json file.
             /* function addElevationLayerFromConfig(config) {
-                            config.source = new itowns.WMTSSource(config.source);
-                            view.addLayer(
-                                new itowns.ElevationLayer(config.id, config),
-                            ).then(debugMenu.addLayerGUI.bind(debugMenu));
-                        }
-                        itowns.Fetcher.json('./layers/JSONLayers/IGN_MNT_HIGHRES.json').then(addElevationLayerFromConfig);
-                        itowns.Fetcher.json('./layers/JSONLayers/WORLD_DTM.json').then(addElevationLayerFromConfig);
+                        config.source = new itowns.WMTSSource(config.source);
+                        view.addLayer(
+                            new itowns.ElevationLayer(config.id, config),
+                        ).then(debugMenu.addLayerGUI.bind(debugMenu));
+                    }
+                    itowns.Fetcher.json('./layers/JSONLayers/IGN_MNT_HIGHRES.json').then(addElevationLayerFromConfig);
+                    itowns.Fetcher.json('./layers/JSONLayers/WORLD_DTM.json').then(addElevationLayerFromConfig);
 
-            */
+        */
 
-            /*  const buildingsSource = new itowns.VectorTilesSource({
-                            style: "http://localhost:8000/services/outputrio",
-                            // We only want to display buildings related data.
-                        });*/
+            // const buildingsSource = new itowns.VectorTilesSource({
+            //     url: "http://localhost:8000/services/output/tiles/${z}/${x}/${y}.png",
+            //     style: "http://localhost:8000/services/output",
+            //     // We only want to display buildings related data.
+            // });
+
+            // const orthoSource = new itowns.TMSSource({
+            //     url: "http://localhost:8000/services/output4326/tiles/${z}/${x}/${y}.png",
+            //     format: "image/png",
+            //     zoom: { min: 5, max: 15 },
+            //     // isInverted: true,
+            //     // crs: "EPSG:4326",
+            //     crs: "EPSG:3857",
+            // });
 
             const orthoSource = new itowns.TMSSource({
-                url: "http://localhost:8000/services/outputrio/tiles/${z}/${x}/${y}.png",
+                url: "http://127.0.0.1/tiles/${z}/${x}/${y}.png",
                 format: "image/png",
                 zoom: { min: 5, max: 15 },
                 // isInverted: true,
-                crs: "EPSG:4326",
-            });
+                // crs: "EPSG:4326",
+                // crs: "EPSG:3857",
 
+                crs: "EPSG:3785",
+                // crs: 'EPSG:900913',
+
+                // geodetic
+            });
             // Create the layer
             const ElevatLayer = new itowns.ElevationLayer("terrrain", {
                 source: orthoSource,
                 useRgbaTextureElevation: true,
                 noDataValue: null,
-                scale: 7,
+                scale: 1,
             });
 
+            // const ElevatLayer = new itowns.ElevationLayer("terrrain", {
+            //     source: buildingsSource,
+            //     useRgbaTextureElevation: true,
+            //     noDataValue: null,
+            //     scale: 7,
+            // });
+            const ApachImageryLayer = new itowns.ColorLayer(
+                "apachterrrainColor",
+                {
+                    source: orthoSource,
+                    // useRgbaTextureElevation: true,
+                }
+            );
             // Add the layer
-            // view.addLayer(ElevatLayer);
+            view.addLayer(ElevatLayer);
+            view.addLayer(ApachImageryLayer);
             // 4.2155435209808907,45.4433781483030472 : 5.2088052552489117,46.3132428145239174
             // Add a WMS imagery source
             var wmsImagerySource = new itowns.WMSSource({
@@ -143,6 +173,7 @@
                 url: "http://localhost:8090/geoserver/terrain/wms",
                 // version: "1.3.0",
                 crs: "EPSG:4326",
+
                 format: "image/png",
                 // networkOptions: { crossOrigin: "anonymous" },
 
@@ -175,6 +206,7 @@
                 tileMatrixSet: "EPSG:4326",
                 tileMatrixCallback: (zoomLevel) => "EPSG:4326:" + zoomLevel,
                 crs: "EPSG:4326",
+
                 url: "http://localhost:8090/geoserver/gwc/service/wmts",
                 format: "image/png",
                 style: "raster",
@@ -190,13 +222,13 @@
                 useRgbaTextureElevation: true,
                 noDataValue: null,
 
-                scale: 7,
+                scale: 1,
             });
             // debug.createTileDebugUI(debugMenu.gui, view);
 
             // Add the layer
 
-            view.addLayer(terrrainwmts);
+            // view.addLayer(terrrainwmts);
             // debugMenu.addElevationLayerGUI(terrrainwmts);
 
             // Create the layer
@@ -205,7 +237,31 @@
                 // useRgbaTextureElevation: true,
             });
 
-            view.addLayer(terrrainwmtsCol);
+            // view.addLayer(terrrainwmtsCol);
+
+            const mborthoSource = new itowns.TMSSource({
+                url: "https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}.jpg?access_token=APIKEY",
+                crs: "EPSG:3857",
+            });
+            const mbElevSource = new itowns.TMSSource({
+                url: "https://api.mapbox.com/v4/mapbox.terrain-rgb/${z}/${x}/${y}.pngraw?access_token=APIKEY",
+                crs: "EPSG:3857",
+            });
+
+            const imageryElevLayer = new itowns.ElevationLayer("terrrainwmts", {
+                source: mbElevSource,
+                useRgbaTextureElevation: true,
+                noDataValue: null,
+                crs: "EPSG:3857",
+
+                scale: 1,
+            });
+            // // Create the layer
+            const imageryLayer = new itowns.ColorLayer("Ortho", {
+                source: mborthoSource,
+            });
+            // view.addLayer(imageryLayer);
+            // view.addLayer(imageryElevLayer);
 
             debug.createTileDebugUI(debugMenu.gui, view);
 

@@ -157,7 +157,7 @@ class GlobeView extends View {
             }
         } else if (layer.isElevationLayer) {
             if (CRS.formatToTms(layer.source.crs) !== this.tileLayer.tileMatrixSets[0]) {
-                return layer._reject(`Only ${this.tileLayer.tileMatrixSets[0]} tileMatrixSet is currently supported for elevation layers`);
+                // return layer._reject(`Only ${this.tileLayer.tileMatrixSets[0]} tileMatrixSet is currently supported for elevation layers`);
             }
         }
 
