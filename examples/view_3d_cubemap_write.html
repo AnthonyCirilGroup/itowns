@@ -1,0 +1,242 @@
+<!-- WRITE CUBEMAP -->
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>three.js webgl - materials - cube refraction [Lucy]</title>
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+        />
+        <!-- <link type="text/css" rel="stylesheet" href="main.css" /> -->
+    </head>
+
+    <body>
+        <button style="bottom: 0px; position: absolute; right: 0" id="savebtn">
+            SAVE
+        </button>
+        <button style="bottom: 0px; position: absolute; left: 0" id="rotate">
+            Rotate
+        </button>
+
+        <!-- Import iTowns source code -->
+        <script src="../dist/itowns.js"></script>
+        <script src="../dist/debug.js"></script>
+        <!-- Import iTowns Widgets plugin -->
+        <script src="../dist/itowns_widgets.js"></script>
+        <!-- Import iTowns LoadingScreen and GuiTools plugins -->
+        <!-- <script src="js/GUI/GuiTools.js"></script>
+        <script src="js/GUI/LoadingScreen.js"></script> -->
+        <script src="../jszip/dist/jszip.min.js"></script>
+        <script src="../FileSaver/dist/FileSaver.min.js"></script>
+        <script>
+            let THREE = itowns.THREE;
+        </script>
+        <script src="https://unpkg.com/three@0.124.0/examples/js/controls/OrbitControls.js"></script>
+
+        <script>
+            let OrbitControls = itowns.THREE.OrbitControls;
+            // let THREE = itowns.THREE;
+            let container, stats, controls;
+
+            let camera, scene, renderer;
+
+            let mouseX = 0,
+                mouseY = 0;
+
+            let windowHalfX = window.innerWidth / 2;
+            let windowHalfY = window.innerHeight / 2;
+
+            var zip = new JSZip();
+            const rotations = [
+                [new THREE.Vector3(0, 1, 0), -Math.PI / 2], //px
+                [new THREE.Vector3(1, 0, 0), -Math.PI / 2], //ny
+                [new THREE.Vector3(0, 1, 0), Math.PI], //nz
+                [new THREE.Vector3(0, 1, 0), Math.PI / 2], //nx
+                [new THREE.Vector3(1, 0, 0), Math.PI / 2], //py
+                [new THREE.Vector3(0, 0, 0), 0], //pz
+            ];
+
+            init();
+            animate();
+
+            function init() {
+                container = document.createElement("div");
+                document.body.appendChild(container);
+
+                camera = new THREE.PerspectiveCamera(
+                    50,
+                    window.innerWidth / window.innerHeight,
+                    1,
+                    100000
+                );
+                camera.position.z = -4000;
+
+                //
+
+                const r = "./cubemaps/orginals_park/";
+
+                const urls = [
+                    r + "px.jpg",
+                    r + "nx.jpg",
+                    r + "py.jpg",
+                    r + "ny.jpg",
+                    r + "pz.jpg",
+                    r + "nz.jpg",
+                ];
+
+                const textureCube = new THREE.CubeTextureLoader().load(urls);
+                textureCube.mapping = THREE.CubeRefractionMapping;
+
+                scene = new THREE.Scene();
+                scene.background = textureCube;
+
+                // LIGHTS
+
+                const ambient = new THREE.AmbientLight(0xffffff);
+                scene.add(ambient);
+
+                pointLight = new THREE.PointLight(0xffffff, 2);
+                scene.add(pointLight);
+
+                // light representation
+
+                const sphere = new THREE.SphereGeometry(100, 16, 8);
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                container.appendChild(renderer.domElement);
+
+                controls = new OrbitControls(camera, renderer.domElement);
+                controls.maxPolarAngle = Math.PI * 0.495;
+                controls.target.set(0, 10, 0);
+                controls.minDistance = 40.0;
+                controls.maxDistance = 200.0;
+                controls.update();
+
+                // document.addEventListener( 'mousemove', onDocumentMouseMove );
+
+                //
+
+                window.addEventListener("resize", onWindowResize);
+            }
+
+            // cubemap();
+            document.querySelector("#savebtn").addEventListener("click", save);
+            document.querySelector("#rotate").addEventListener("click", rotate);
+
+            function cubemap() {
+                var clientSize = new THREE.Vector2();
+                renderer.getSize(clientSize);
+                console.log(clientSize);
+                var fov = camera.fov;
+
+                // Créer un tableau avec les noms des faces du cubemap
+                // var faces = ["px", "nx", "py", "ny", "pz", "nz"];
+                var faces = ["px", "ny", "nz", "nx", "py", "pz"];
+
+                var clientSize = new THREE.Vector2();
+                renderer.getSize(clientSize);
+                console.log(clientSize);
+                var fov = camera.fov;
+
+                var aspect = camera.aspect;
+                renderer.setSize(1024, 1024);
+                camera.fov =
+                    2 *
+                    THREE.MathUtils.radToDeg(
+                        Math.atan(
+                            (1024 / clientSize.y) *
+                                Math.tan(
+                                    THREE.MathUtils.degToRad(camera.fov) / 2
+                                )
+                        )
+                    );
+                camera.fov = 90;
+                camera.aspect = 1.0;
+                camera.updateProjectionMatrix();
+
+                // Parcourir les faces du cubemap
+                for (var i = 0; i < 6; i++) {
+                    if (i > 0)
+                        camera.rotateOnAxis(
+                            rotations[i - 1][0],
+                            rotations[i - 1][1] * -1.0
+                        );
+                    // camera.rotateOnWorldAxis(
+                    //     rotations[i - 1][0],
+                    //     rotations[i - 1][1] * -1.0
+                    // );
+
+                    // camera.rotateOnWorldAxis(rotations[i][0], rotations[i][1]);
+                    camera.rotateOnAxis(rotations[i][0], rotations[i][1]);
+
+                    render();
+
+                    // Récupérer le rendu de la face courante sous forme de données URL
+                    var dataURL = renderer.domElement.toDataURL("image/png");
+
+                    // Extraire les données binaires de l'URL
+                    var data = dataURL.split(",")[1];
+
+                    // Ajouter les données binaires au fichier zip avec le nom de la face
+                    zip.file(faces[i] + ".png", data, { base64: true });
+                }
+                renderer.setSize(clientSize.x, clientSize.y);
+                camera.aspect = aspect;
+                camera.fov = fov;
+                camera.updateProjectionMatrix();
+
+                render();
+            }
+            var k = 0;
+            function rotate() {
+                if (k > 0)
+                    camera.rotateOnAxis(
+                        rotations[k - 1][0],
+                        rotations[k - 1][1] * -1.0
+                    );
+                // camera.rotateOnWorldAxis(
+                //     rotations[k - 1][0],
+                //     rotations[k - 1][1] * -1.0
+                // );
+
+                // camera.rotateOnWorldAxis(rotations[k][0], rotations[k][1]);
+                camera.rotateOnAxis(rotations[k][0], rotations[k][1]);
+
+                // render();
+                k = k == 5 ? 0 : k + 1;
+            }
+            function save() {
+                cubemap();
+                // Générer le fichier zip et le télécharger
+                zip.generateAsync({ type: "blob" }).then(function (blob) {
+                    saveAs(blob, "cubemappng.zip"); // Utiliser la fonction saveAs de FileSaver.js
+                });
+            }
+
+            function onWindowResize() {
+                windowHalfX = window.innerWidth / 2;
+                windowHalfY = window.innerHeight / 2;
+
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+
+            //
+
+            function animate() {
+                requestAnimationFrame(animate);
+
+                render();
+            }
+
+            function render() {
+                renderer.render(scene, camera);
+            }
+        </script>
+    </body>
+</html>
