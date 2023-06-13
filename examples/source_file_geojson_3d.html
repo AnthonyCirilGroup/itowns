@@ -1,77 +1,283 @@
 <html>
-    <head>
-        <title>Itowns - Globe + Multipolygon Geojson</title>
-        <meta charset="UTF-8">
-        <link rel="stylesheet" type="text/css" href="css/example.css">
-        <link rel="stylesheet" type="text/css" href="css/LoadingScreen.css">
 
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>
-    </head>
-    <body>
-        <div id="viewerDiv" class="viewer"></div>
-        <script src="js/GUI/GuiTools.js"></script>
-        <script src="../dist/itowns.js"></script>
-        <script src="../dist/debug.js"></script>
-        <script type="text/javascript">
-            // Define initial camera position
-            var placement = {
-                coord: new itowns.Coordinates('EPSG:4326', 3.05, 48.95),
-                range: 70000,
+<head>
+    <title>Itowns - Globe + Multipolygon Geojson</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="css/example.css">
+    <link rel="stylesheet" type="text/css" href="css/LoadingScreen.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>
+</head>
+
+<body>
+    <div id="viewerDiv" class="viewer"></div>
+    <button style="bottom: 0px; position: absolute; right: 0; z-index: 1" id="savebtn">
+        SAVE
+    </button>
+    <script src="js/GUI/GuiTools.js"></script>
+    <script src="../dist/itowns.js"></script>
+    <script src="../dist/debug.js"></script>
+    <script src="../jszip/dist/jszip.min.js"></script>
+    <script src="../FileSaver/dist/FileSaver.min.js"></script>
+    <script>
+        let THREE = itowns.THREE;
+    </script>
+
+    <script>
+
+        // let THREE = itowns.THREE;
+        let container, stats, controls;
+
+        let camera, scene, renderer;
+        var faces = ["px", "nz", "nx", "ny", "py", "pz"];
+
+        var zip = new JSZip();
+        // const rotations = [
+        //     [new THREE.Vector3(0, 1, 0), -Math.PI / 2], //px
+        //     [new THREE.Vector3(1, 0, 0), -Math.PI / 2], //ny
+        //     [new THREE.Vector3(0, 1, 0), Math.PI], //nz
+        //     [new THREE.Vector3(0, 1, 0), Math.PI / 2], //nx
+        //     [new THREE.Vector3(1, 0, 0), Math.PI / 2], //py
+        //     [new THREE.Vector3(0, 0, 0), 0], //pz
+        // ];
+
+        const rotations = [
+            [new THREE.Vector3(0, 1, 0), -Math.PI / 2], //droite    nx
+            [new THREE.Vector3(0, 1, 0), Math.PI], //derriere   nz
+            [new THREE.Vector3(0, 1, 0), Math.PI / 2], //gauche px
+
+            [new THREE.Vector3(1, 0, 0), -Math.PI / 2], //bas   ny
+            [new THREE.Vector3(1, 0, 0), Math.PI / 2], //haut   py
+
+            [new THREE.Vector3(0, 0, 0), 0], //face pz
+        ];
+        // Define initial camera position
+        var placement = {
+            coord: new itowns.Coordinates('EPSG:4326', 3.05, 48.95),
+            range: 100,
+            // range: 70000,
+        }
+
+        // `viewerDiv` will contain iTowns' rendering area (`<canvas>`)
+        var viewerDiv = document.getElementById('viewerDiv');
+
+        // Instanciate iTowns GlobeView*
+        var view = new itowns.GlobeView(viewerDiv, placement);
+        var menuGlobe = new GuiTools('menuDiv', view);
+
+        // Add one imagery layer to the scene
+        // This layer is defined in a json file but it could be defined as a plain js
+        // object. See Layer* for more info.
+        itowns.Fetcher.json('./layers/JSONLayers/Ortho.json').then(function _(config) {
+            config.source = new itowns.WMTSSource(config.source);
+            var layer = new itowns.ColorLayer('Ortho', config);
+            view.addLayer(layer).then(menuGlobe.addLayerGUI.bind(menuGlobe));
+        });
+
+        // Add two elevation layers.
+        // These will deform iTowns globe geometry to represent terrain elevation.
+        function addElevationLayerFromConfig(config) {
+            config.source = new itowns.WMTSSource(config.source);
+            var layer = new itowns.ElevationLayer(config.id, config);
+            view.addLayer(layer).then(menuGlobe.addLayerGUI.bind(menuGlobe));
+        }
+        itowns.Fetcher.json('./layers/JSONLayers/IGN_MNT_HIGHRES.json').then(addElevationLayerFromConfig);
+        itowns.Fetcher.json('./layers/JSONLayers/WORLD_DTM.json').then(addElevationLayerFromConfig);
+
+        // Add a geometry layer, which will contain the multipolygon to display
+        var marne = new itowns.FeatureGeometryLayer('Marne', {
+            // Use a FileSource to load a single file once
+            source: new itowns.FileSource({
+                url: 'https://raw.githubusercontent.com/iTowns/iTowns2-sample-data/master/multipolygon.geojson',
+                crs: 'EPSG:4326',
+                format: 'application/json',
+            }),
+            transparent: true,
+            opacity: 0.7,
+            zoom: { min: 10 },
+            style: new itowns.Style({
+                fill: {
+                    color: new itowns.THREE.Color(0xbbffbb),
+                    extrusion_height: 80,
+                }
+            })
+        });
+
+        view.addLayer(marne).then(function menu(layer) {
+            var gui = debug.GeometryDebug.createGeometryDebugUI(menuGlobe.gui, view, layer);
+            debug.GeometryDebug.addWireFrameCheckbox(gui, view, layer);
+        });
+
+
+
+        document.querySelector("#savebtn").addEventListener("click", save);
+        const loaderContainer = document.querySelector('.loaderDiv');
+        console.log(loaderContainer)
+        camera = view.camera.camera3D;
+
+        camera.updateProjectionMatrix(); var g = view.mainLoop.gfxEngine;
+        renderer = g.renderer;
+
+        var i = 0;
+
+        var clientSize = new THREE.Vector2();
+        renderer.getSize(clientSize);
+        console.log(clientSize);
+        var fov = camera.fov;
+
+        var aspect = camera.aspect;
+        view.mainLoop.addEventListener("command-queue-empty", function () {
+            // eslint-disable-next-line no-console
+            console.info("tcommand-queue-empty");
+            const allReady = view.getLayers().every(layer => layer.ready);
+            // // if (!allReady)
+            // //     return;
+            // // if (!(allReady &&
+            // //     view.mainLoop.scheduler.commandsWaitingExecutionCount() == 0))
+            // //     return;
+            // if (!(allReady &&
+            //     view.mainLoop.renderingState == 0))
+            //     return;
+            if (!(allReady &&
+                view.mainLoop.scheduler.commandsWaitingExecutionCount() == 0 &&
+                view.mainLoop.renderingState == 0))     // todo remove 0, crete new event
+                return;
+            console.info("Readddy");
+
+        });
+
+        view.addEventListener(
+            itowns.VIEW_EVENTS.LAYERS_INITIALIZED,
+            function () {
+                // eslint-disable-next-line no-console
+                console.info("Globe initialized");
+                // document.querySelector("#savebtn").disabled = false;
+            }
+        );
+
+        function cubemap3() {
+            console.log("herrree " + i);
+            renderer.render(view.scene, view.camera.camera3D);
+            // view.notifyChange(view.camera.camera3D);
+            const allReady = view.getLayers().every(layer => layer.ready);
+            // // if (!allReady)
+            // //     return;
+            // // if (!(allReady &&
+            // //     view.mainLoop.scheduler.commandsWaitingExecutionCount() == 0))
+            // //     return;
+            // if (!(allReady &&
+            //     view.mainLoop.renderingState == 0))
+            //     return;
+            if (!(allReady &&
+                view.mainLoop.scheduler.commandsWaitingExecutionCount() == 0 &&
+                view.mainLoop.renderingState == 0))     // todo remove 0, crete new event
+                return;
+
+
+            if (i > 0) {
+                var dataURL = renderer.domElement.toDataURL("image/png");
+
+                // Extraire les données binaires de l'URL
+                var data = dataURL.split(",")[1];
+                // console.log(dataURL)
+                zip.file(faces[i - 1] + ".png", data, { base64: true });
+                // var file = new File(data, faces[i - 1] + ".png", {
+                //     type: "base64",
+                // });
+                // saveAs(dataURL, faces[i - 1] + ".png"); // Utiliser la fonction saveAs de FileSaver.js
+
+
+
+                // Créer un élément a avec les attributs appropriés
+                // var link = document.createElement("a");
+                // link.href = dataURL;
+                // link.download = "image.png";
+                // link.textContent = "Télécharger " + faces[i - 1];
+                // document.body.appendChild(link);
+
+
+
+                camera.rotateOnAxis(
+                    rotations[i - 1][0],
+                    rotations[i - 1][1] * -1.0
+                );
+                // Ajouter les données binaires au fichier zip avec le nom de la face
             }
 
-            // `viewerDiv` will contain iTowns' rendering area (`<canvas>`)
-            var viewerDiv = document.getElementById('viewerDiv');
+            if (i < 6) {
+                camera.rotateOnAxis(rotations[i][0], rotations[i][1]);
 
-            // Instanciate iTowns GlobeView*
-            var view = new itowns.GlobeView(viewerDiv, placement);
-            var menuGlobe = new GuiTools('menuDiv', view);
-
-            // Add one imagery layer to the scene
-            // This layer is defined in a json file but it could be defined as a plain js
-            // object. See Layer* for more info.
-            itowns.Fetcher.json('./layers/JSONLayers/Ortho.json').then(function _(config) {
-                config.source = new itowns.WMTSSource(config.source);
-                var layer = new itowns.ColorLayer('Ortho', config);
-                view.addLayer(layer).then(menuGlobe.addLayerGUI.bind(menuGlobe));
-            });
-
-            // Add two elevation layers.
-            // These will deform iTowns globe geometry to represent terrain elevation.
-            function addElevationLayerFromConfig(config) {
-                config.source = new itowns.WMTSSource(config.source);
-                var layer = new itowns.ElevationLayer(config.id, config);
-                view.addLayer(layer).then(menuGlobe.addLayerGUI.bind(menuGlobe));
+                renderer.render(view.scene, view.camera.camera3D);
+                view.notifyChange(view.camera.camera3D);
             }
-            itowns.Fetcher.json('./layers/JSONLayers/IGN_MNT_HIGHRES.json').then(addElevationLayerFromConfig);
-            itowns.Fetcher.json('./layers/JSONLayers/WORLD_DTM.json').then(addElevationLayerFromConfig);
 
-            // Add a geometry layer, which will contain the multipolygon to display
-            var marne = new itowns.FeatureGeometryLayer('Marne', {
-                // Use a FileSource to load a single file once
-                source: new itowns.FileSource({
-                    url: 'https://raw.githubusercontent.com/iTowns/iTowns2-sample-data/master/multipolygon.geojson',
-                    crs: 'EPSG:4326',
-                    format: 'application/json',
-                }),
-                transparent: true,
-                opacity: 0.7,
-                zoom: { min: 10 },
-                style: new itowns.Style({
-                    fill: {
-                        color: new itowns.THREE.Color(0xbbffbb),
-                        extrusion_height: 80,
-                    }
-                })
-            });
+            if (i == 6) {
+                // Générer le fichier zip et le télécharger
+                zip.generateAsync({ type: "blob" }).then(function (blob) {
+                    saveAs(blob, "cubemappng.zip"); // Utiliser la fonction saveAs de FileSaver.js
+                });
+                endCubemap();
+                i = 0;
+            } else i++;
+        }
 
-            view.addLayer(marne).then(function menu(layer) {
-                var gui = debug.GeometryDebug.createGeometryDebugUI(menuGlobe.gui, view, layer);
-                debug.GeometryDebug.addWireFrameCheckbox(gui, view, layer);
-            });
-        </script>
-    </body>
+
+        function initCubemap() {
+
+            renderer.setSize(1024, 1024);
+
+            // https://observablehq.com/@grantcuster/understanding-scale-and-the-three-js-perspective-camera
+
+            camera.fov = 90;
+            camera.aspect = 1.0;
+
+            // var horizontalFov = 90;
+            // camera.fov = (Math.atan(Math.tan(((horizontalFov / 2) * Math.PI) / 180) / camera.aspect) * 2 * 180) / Math.PI;
+            // console.log(camera.fov)
+
+
+            camera.updateProjectionMatrix();
+            view.mainLoop.addEventListener("command-queue-empty", cubemap3);
+
+            renderer.render(view.scene, view.camera.camera3D);
+            view.notifyChange(view.camera.camera3D);
+
+
+
+
+
+        }
+        function endCubemap() {
+            view.mainLoop.removeEventListener(
+                "command-queue-empty",
+                cubemap3
+            );
+
+            renderer.setSize(clientSize.x, clientSize.y);
+            camera.fov = fov;
+            camera.aspect = aspect;
+            camera.updateProjectionMatrix();
+            renderer.render(view.scene, view.camera.camera3D);
+            view.notifyChange(view.camera.camera3D);
+
+        }
+        function save() {
+            /*  initCubemap();
+            cubemap();
+            if (i == 6) {
+                // Générer le fichier zip et le télécharger
+                zip.generateAsync({ type: "blob" }).then(function (blob) {
+                    saveAs(blob, "cubemappng.zip"); // Utiliser la fonction saveAs de FileSaver.js
+                });
+                endCubemap();
+                i = 0;
+            } else i++;*/
+
+            initCubemap();
+            // cubemap3();
+        }
+    </script>
+</body>
+
 </html>
-
-
-

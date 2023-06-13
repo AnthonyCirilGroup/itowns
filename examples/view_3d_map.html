@@ -187,7 +187,7 @@
         let container, stats, controls;
 
         let camera, scene, renderer;
-        var faces = ["nx", "nz", "px", "ny", "py", "pz"];
+        var faces = ["px", "nz", "nx", "ny", "py", "pz"];
 
         var zip = new JSZip();
         // const rotations = [
@@ -373,7 +373,8 @@
         // LAYERS_INITIALIZED
         // INITIALIZED
         view.addEventListener(
-            itowns.VIEW_EVENTS.LAYERS_INITIALIZED,
+            // itowns.VIEW_EVENTS.LAYERS_INITIALIZED,
+            itowns.VIEW_EVENTS.INITIALIZED,
             function () {
                 // eslint-disable-next-line no-console
                 console.info("Globe initialized");
@@ -394,6 +395,21 @@
         view.mainLoop.addEventListener("command-queue-empty", function () {
             // eslint-disable-next-line no-console
             console.info("tcommand-queue-empty");
+            const allReady = view.getLayers().every(layer => layer.ready);
+            // // if (!allReady)
+            // //     return;
+            // // if (!(allReady &&
+            // //     view.mainLoop.scheduler.commandsWaitingExecutionCount() == 0))
+            // //     return;
+            // if (!(allReady &&
+            //     view.mainLoop.renderingState == 0))
+            //     return;
+            if (!(allReady &&
+                view.mainLoop.scheduler.commandsWaitingExecutionCount() == 0 &&
+                view.mainLoop.renderingState == 0))     // todo remove 0, crete new event
+                return;
+            console.info("Readddy");
+
         });
 
         // view.addEventListener(itowns.GLOBE_VIEW_EVENTS.GLOBE_INITIALIZED, function () {
@@ -403,6 +419,11 @@
         //     }).catch(console.error);
         // });
         // cubemap();
+
+        view.addFrameRequester(itowns.MAIN_LOOP_EVENTS.UPDATE_END, function () {
+            // eslint-disable-next-line no-console
+            console.info("test event22222");
+        });
         document.querySelector("#savebtn").addEventListener("click", save);
         document.querySelector("#rotate").addEventListener("click", rotate);
         document.querySelector("#cubemap").addEventListener("click", screen);
@@ -410,7 +431,7 @@
         console.log(loaderContainer)
         camera = view.camera.camera3D;
 
-        var g = view.mainLoop.gfxEngine;
+        camera.updateProjectionMatrix(); var g = view.mainLoop.gfxEngine;
         renderer = g.renderer;
 
         var i = 0;
@@ -434,6 +455,8 @@
                 );
                 // Ajouter les données binaires au fichier zip avec le nom de la face
                 zip.file(faces[i - 1] + ".png", data, { base64: true });
+
+
             }
 
             if (i < 6)
@@ -459,14 +482,30 @@
                 view.mainLoop.renderingState == 0))     // todo remove 0, crete new event
                 return;
             renderer.render(view.scene, view.camera.camera3D);
-            // view.notifyChange(view.camera.camera3D);
+            view.notifyChange(view.camera.camera3D);
 
             if (i > 0) {
                 var dataURL = renderer.domElement.toDataURL("image/png");
 
                 // Extraire les données binaires de l'URL
                 var data = dataURL.split(",")[1];
+                // console.log(dataURL)
                 zip.file(faces[i - 1] + ".png", data, { base64: true });
+                // var file = new File(data, faces[i - 1] + ".png", {
+                //     type: "base64",
+                // });
+                // saveAs(dataURL, faces[i - 1] + ".png"); // Utiliser la fonction saveAs de FileSaver.js
+
+
+
+                // Créer un élément a avec les attributs appropriés
+                // var link = document.createElement("a");
+                // link.href = dataURL;
+                // link.download = "image.png";
+                // link.textContent = "Télécharger " + faces[i - 1];
+                // document.body.appendChild(link);
+
+
 
                 camera.rotateOnAxis(
                     rotations[i - 1][0],
@@ -512,21 +551,46 @@
         function initCubemap() {
             loaderContainer.style.display = 'block';
 
-            // renderer.setSize(1024, 1024);
-            renderer.setSize(4096, 4096);
+            renderer.setSize(1024, 1024);
+
+            // https://observablehq.com/@grantcuster/understanding-scale-and-the-three-js-perspective-camera
+
             camera.fov = 90;
             camera.aspect = 1.0;
+
+            // var horizontalFov = 90;
+            // camera.fov = (Math.atan(Math.tan(((horizontalFov / 2) * Math.PI) / 180) / camera.aspect) * 2 * 180) / Math.PI;
+            // console.log(camera.fov)
+
+
             camera.updateProjectionMatrix();
-            view.mainLoop.addEventListener("command-queue-empty", cubemap3);
+            // view.mainLoop.addEventListener("command-queue-empty", cubemap3);
+            view.mainLoop.addEventListener("command-queue-empty", toCube);
 
             renderer.render(view.scene, view.camera.camera3D);
             view.notifyChange(view.camera.camera3D);
+
+
+
+
+
         }
+
+        function toCube() {
+
+            setTimeout(function () {
+
+                cubemap3();
+
+            }, 5000);
+
+        }
+
         function endCubemap() {
-            view.mainLoop.removeEventListener(
-                "command-queue-empty",
-                cubemap3
-            );
+            view.mainLoop.removeEventListener("command-queue-empty", cubemap3);
+
+            view.mainLoop.removeEventListener("command-queue-empty", toCube);
+
 
             renderer.setSize(clientSize.x, clientSize.y);
             camera.fov = fov;
@@ -538,74 +602,29 @@
 
         }
         function save() {
-            /*  initCubemap();
-            cubemap();
-            if (i == 6) {
-                // Générer le fichier zip et le télécharger
-                zip.generateAsync({ type: "blob" }).then(function (blob) {
-                    saveAs(blob, "cubemappng.zip"); // Utiliser la fonction saveAs de FileSaver.js
-                });
-                endCubemap();
-                i = 0;
-            } else i++;*/
+
+
+            initCubemap();
+
+        }
+
+        function save2() {
+
 
             initCubemap();
             // cubemap3();
         }
 
-        function cubemap2() {
-            initCubemap();
+        function save3() {
 
-            var dataURL = renderer.domElement.toDataURL("image/png");
 
-            // Extraire les données binaires de l'URL
-            var data = dataURL.split(",")[1];
-            for (var i = 0; i <= 6; i++) {
-                if (i > 0) {
-                    camera.rotateOnAxis(
-                        rotations[i - 1][0],
-                        rotations[i - 1][1] * -1.0
-                    );
-                    // Ajouter les données binaires au fichier zip avec le nom de la face
-                    zip.file(faces[i - 1] + ".png", data, { base64: true });
-                }
-
-                if (i < 6)
-                    camera.rotateOnAxis(rotations[i][0], rotations[i][1]);
-
-                renderer.render(view.scene, view.camera.camera3D);
-                view.notifyChange(view.camera.camera3D);
-            }
-            zip.generateAsync({ type: "blob" }).then(function (blob) {
-                saveAs(blob, "cubemappng.zip"); // Utiliser la fonction saveAs de FileSaver.js
-            });
-            endCubemap();
+            if (i == 0)
+                initCubemap();
+            else
+                cubemap3();
         }
 
-        function screen() {
-            /*  renderer.render(view.scene, view.camera.camera3D);
-              view.notifyChange(view.camera.camera3D);
-              var dataURL = renderer.domElement.toDataURL("image/png");
-  
-              // Extraire les données binaires de l'URL
-              var data = dataURL.split(",")[1];
-  
-              // Ajouter les données binaires au fichier zip avec le nom de la face
-              zip.file("cubemappng.png", data, { base64: true });
-              // Générer le fichier zip et le télécharger
-              zip.generateAsync({ type: "blob" }).then(function (blob) {
-                  saveAs(blob, "screen.zip"); // Utiliser la fonction saveAs de FileSaver.js
-              });*/
 
-
-            renderer.setSize(1024, 1024);
-            camera.fov = 90;
-            camera.aspect = 1.0;
-            camera.updateProjectionMatrix();
-
-            renderer.render(view.scene, view.camera.camera3D);
-            view.notifyChange(view.camera.camera3D);
-        }
     </script>
 </body>
 
