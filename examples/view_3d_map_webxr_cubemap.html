@@ -203,6 +203,15 @@
                     "nz.png",
                 ];
 
+            //     const rgbmUrls = [
+            //     "px.png",
+            //     "nx.png",
+            //     "py.png",
+            //     "ny.png",
+            //     "pz.png",
+            //     "nz.png",
+            // ];
+
                 // const rgbmUrls = [
                 // 	"px.png",
                 // 	"nx.png",
@@ -268,6 +277,8 @@
                 gui.add(material, "metalness", 0, 1);
                 gui.add(renderer, "toneMappingExposure", 0, 2).name("exposure");
 
+
+                /*
                 sphere = new THREE.Mesh(
                     new THREE.IcosahedronGeometry(15, 8),
                     material
@@ -291,6 +302,8 @@
                 );
                 scene.add(torus);
 
+                */
+
                 //
 
                 controls = new OrbitControls(camera, renderer.domElement);
@@ -305,7 +318,7 @@
             }
 
             function animation(msTime) {
-                const time = msTime / 1000;
+              /*  const time = msTime / 1000;
 
                 cube.position.x = Math.cos(time) * 30;
                 cube.position.y = Math.sin(time) * 30;
@@ -320,7 +333,7 @@
 
                 torus.rotation.x += 0.02;
                 torus.rotation.y += 0.03;
-
+*/
                 cubeCamera.update(renderer, scene);
 
                 controls.update();

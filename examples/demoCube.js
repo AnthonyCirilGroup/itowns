@@ -49,7 +49,7 @@ function genCubemap() {
 
 
 
-
+    console.log(view.getLayers());
 
 
     // let THREE = itowns.THREE;
@@ -58,7 +58,9 @@ function genCubemap() {
 
     let camera; let scene; let
         renderer;
-    const faces = ['nx', 'nz', 'px', 'ny', 'py', 'pz'];
+    // var faces = ["nx", "nz", "px", "ny", "py", "pz"];
+    const faces = ['px', 'nz', 'nx', 'ny', 'py', 'pz'];
+
     const rotations = [
         [new THREE.Vector3(0, 1, 0), -Math.PI / 2], // droite    nx
         [new THREE.Vector3(0, 1, 0), Math.PI], // derriere   nz
@@ -92,8 +94,8 @@ function genCubemap() {
         if (
             !(
                 allReady &&
-        view.mainLoop.scheduler.commandsWaitingExecutionCount() == 0 &&
-        view.mainLoop.renderingState == 0
+                view.mainLoop.scheduler.commandsWaitingExecutionCount() == 0 &&
+                view.mainLoop.renderingState == 0
             )
         )
         // todo remove 0, crete new event
@@ -141,12 +143,12 @@ function genCubemap() {
     function initCubemap() {
         loaderContainer.style.display = 'block';
 
-        // renderer.setSize(1024, 1024);
+        // renderer.setSize(2048, 2048);
         renderer.setSize(1024, 1024);
         camera.fov = 90;
         camera.aspect = 1.0;
         camera.updateProjectionMatrix();
-        // view.mainLoop.addEventListener("command-queue-empty", cubemap3);
+        // old view.mainLoop.addEventListener("command-queue-empty", cubemap3);
         view.mainLoop.addEventListener('command-queue-empty', toCube);
 
 
@@ -168,6 +170,8 @@ function genCubemap() {
     function save() {
         initCubemap();
     }
+
+
     let locked = false;
 
     function toCube() {
@@ -175,9 +179,23 @@ function genCubemap() {
 
         setTimeout(function () {
             cubemap3();
-              				locked = false;
+            locked = false;
         }, 5000);
     }
+
+
+
+    const layers = view.getLayers();
+    // Utiliser la méthode find() avec une fonction fléchée anonyme
+    const pntsLayer = layers.find(o => o.name === 'fressines geredis');
+
+    pntsLayer.onTileContentLoaded = function (tileContent) {
+        tileContent.traverse(function (obj) {
+            if (obj.isPoints) {
+                obj.material.size = 1.0;
+            }
+        });
+    };
 }
 setTimeout(function () {
     /*

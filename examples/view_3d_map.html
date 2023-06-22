@@ -226,21 +226,63 @@
         //     coord: new itowns.Coordinates('EPSG:4326', 2.351323, 48.856712),
         //     range: 25000000,
         // }
-
         var placement = {
-            //     coord: new itowns.Coordinates('EPSG:4326', 2.351323, 48.856712),
-            coord: new itowns.Coordinates("EPSG:4326", 4.857574, 45.765613),
-            // heading: 45,
-            range: 1800,
-            tilt: 30,
-        };
-        // `viewerDiv` will contain iTowns' rendering area (`<canvas>`)
-        const viewerDiv = document.getElementById("viewerDiv");
+                coord: new itowns.Coordinates('EPSG:4326', 3.695885, 43.397379, 0),
 
-        // Create a GlobeView
-        const view = new itowns.GlobeView(viewerDiv, placement);
+                range: 3000,
+                tilt: 55,
+                heading: 180
+            }
+            // iTowns namespace defined here
+            var viewerDiv = document.getElementById('viewerDiv');
 
-        // Setup loading screen and debug menu
+            var view = new itowns.GlobeView(viewerDiv, placement);
+            view.camera.camera3D.near = 5;
+            setupLoadingScreen(viewerDiv, view);
+
+            var menuGlobe = new GuiTools('menuDiv', view, 300);
+
+            function updatePointCloudSize({tileContent}) {
+                tileContent.traverse(function (obj) {
+                    if (obj.isPoints) {
+                        obj.material.size = 2.0;
+                    }
+                });
+            }
+            // Create a new Layer 3d-tiles For Pointcloud
+            // -------------------------------------------
+            var $3dTilesLayerSetePC = new itowns.C3DTilesLayer('3d-tiles-sete', {
+                name: 'SetePC',
+                sseThreshold: 5,
+                // pntsMode: itowns.PNTS_MODE.CLASSIFICATION,
+                source: new itowns.C3DTilesSource({
+                    url: 'https://10.1.23.22/3dtiles/pnts-geredis-fressines-2/tileset.json',
+
+
+                    // url: 'https://raw.githubusercontent.com/iTowns/iTowns2-sample-data/master/pointclouds/pnts-sete-2021-0756_6256/tileset.json',
+                }),
+            }, view);
+
+            $3dTilesLayerSetePC.addEventListener(
+                itowns.C3DTILES_LAYER_EVENTS.ON_TILE_CONTENT_LOADED,
+                updatePointCloudSize,
+            );
+
+            itowns.View.prototype.addLayer.call(view, $3dTilesLayerSetePC);
+            function switchMode(){
+                let pntsLayer = view.getLayerById("3d-tiles-sete");
+                
+                if(pntsLayer){
+                    pntsLayer = pntsLayer;
+                    pntsLayer.pntsMode = pntsLayer.pntsMode == itowns.PNTS_MODE.COLOR ? itowns.PNTS_MODE.CLASSIFICATION : itowns.PNTS_MODE.COLOR;
+                    view.notifyChange(view.camera.camera3D);
+                }
+            }
+        
+        // // Create a GlobeView
+        // const view = new itowns.GlobeView(viewerDiv, placement);
+
+        // // Setup loading screen and debug menu
         setupLoadingScreen(viewerDiv, view);
         const debugMenu = new GuiTools("menuDiv", view);
 
