@@ -75,6 +75,7 @@ function genCubemap() {
     document.querySelector('#savebtn').addEventListener('click', save);
     const loaderContainer = document.querySelector('.loaderDiv');
     camera = view.camera.camera3D;
+    const near = camera.near;
 
     camera.updateProjectionMatrix();
     const g = view.mainLoop.gfxEngine;
@@ -84,7 +85,7 @@ function genCubemap() {
 
     const clientSize = new THREE.Vector2();
     renderer.getSize(clientSize);
-    console.log(clientSize);
+
     const fov = camera.fov;
 
     const aspect = camera.aspect;
@@ -143,10 +144,12 @@ function genCubemap() {
     function initCubemap() {
         loaderContainer.style.display = 'block';
 
-        // renderer.setSize(2048, 2048);
-        renderer.setSize(1024, 1024);
+        renderer.setSize(2048, 2048);
+        // renderer.setSize(1024, 1024);
         camera.fov = 90;
         camera.aspect = 1.0;
+        camera.near = 5;
+
         camera.updateProjectionMatrix();
         // old view.mainLoop.addEventListener("command-queue-empty", cubemap3);
         view.mainLoop.addEventListener('command-queue-empty', toCube);
@@ -159,6 +162,7 @@ function genCubemap() {
         //   view.mainLoop.removeEventListener("command-queue-empty", cubemap3);
         view.mainLoop.removeEventListener('command-queue-empty', toCube);
 
+        camera.near = near;
         renderer.setSize(clientSize.x, clientSize.y);
         camera.fov = fov;
         camera.aspect = aspect;
@@ -192,7 +196,8 @@ function genCubemap() {
     pntsLayer.onTileContentLoaded = function (tileContent) {
         tileContent.traverse(function (obj) {
             if (obj.isPoints) {
-                obj.material.size = 1.0;
+                // obj.material.size = 1.0;
+                obj.material.size = 0.5;
             }
         });
     };

@@ -1,0 +1,710 @@
+<html>
+
+<head>
+    <title>Itowns - Globe</title>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="css/example.css" />
+    <link rel="stylesheet" type="text/css" href="css/LoadingScreen.css" />
+    <link rel="stylesheet" type="text/css" href="css/widgets.css" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>
+</head>
+
+<body>
+    
+    <div class="loaderDiv">
+        <div class="loading">Loading&#8230;</div>
+
+    </div>
+
+
+    <div id="viewerDiv"> </div>
+    <button id="capture" style="bottom: 0px; position: absolute; left: 100px; z-index: 1">Capture</button>
+    <button style="bottom: 0px; position: absolute; right: 0; z-index: 1" id="savebtn">
+        SAVE
+    </button>
+    <button style="bottom: 0px; position: absolute; left: 0; z-index: 1" id="rotate">
+        Rotate
+    </button>
+
+    <button style="bottom: 0px; position: absolute; left: 50%; z-index: 1" id="cubemap">
+        screen
+    </button>
+
+    <style>
+        .loaderDiv {
+            display: none;
+        }
+
+        /* Absolute Center Spinner */
+        .loading {
+            position: fixed;
+            z-index: 999;
+            height: 2em;
+            width: 2em;
+            overflow: visible;
+            margin: auto;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+        }
+
+        /* Transparent Overlay */
+        .loading:before {
+            content: '';
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(rgba(20, 20, 20, .8), rgba(0, 0, 0, .8));
+
+            background: -webkit-radial-gradient(rgba(20, 20, 20, .8), rgba(0, 0, 0, .8));
+        }
+
+        /* :not(:required) hides these rules from IE9 and below */
+        .loading:not(:required) {
+            /* hide "loading..." text */
+            font: 0/0 a;
+            color: transparent;
+            text-shadow: none;
+            background-color: transparent;
+            border: 0;
+        }
+
+        .loading:not(:required):after {
+            content: '';
+            display: block;
+            font-size: 10px;
+            width: 1em;
+            height: 1em;
+            margin-top: -0.5em;
+            -webkit-animation: spinner 150ms infinite linear;
+            -moz-animation: spinner 150ms infinite linear;
+            -ms-animation: spinner 150ms infinite linear;
+            -o-animation: spinner 150ms infinite linear;
+            animation: spinner 150ms infinite linear;
+            border-radius: 0.5em;
+            -webkit-box-shadow: rgba(255, 255, 255, 0.75) 1.5em 0 0 0, rgba(255, 255, 255, 0.75) 1.1em 1.1em 0 0, rgba(255, 255, 255, 0.75) 0 1.5em 0 0, rgba(255, 255, 255, 0.75) -1.1em 1.1em 0 0, rgba(255, 255, 255, 0.75) -1.5em 0 0 0, rgba(255, 255, 255, 0.75) -1.1em -1.1em 0 0, rgba(255, 255, 255, 0.75) 0 -1.5em 0 0, rgba(255, 255, 255, 0.75) 1.1em -1.1em 0 0;
+            box-shadow: rgba(255, 255, 255, 0.75) 1.5em 0 0 0, rgba(255, 255, 255, 0.75) 1.1em 1.1em 0 0, rgba(255, 255, 255, 0.75) 0 1.5em 0 0, rgba(255, 255, 255, 0.75) -1.1em 1.1em 0 0, rgba(255, 255, 255, 0.75) -1.5em 0 0 0, rgba(255, 255, 255, 0.75) -1.1em -1.1em 0 0, rgba(255, 255, 255, 0.75) 0 -1.5em 0 0, rgba(255, 255, 255, 0.75) 1.1em -1.1em 0 0;
+        }
+
+        /* Animation */
+
+        @-webkit-keyframes spinner {
+            0% {
+                -webkit-transform: rotate(0deg);
+                -moz-transform: rotate(0deg);
+                -ms-transform: rotate(0deg);
+                -o-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+                -moz-transform: rotate(360deg);
+                -ms-transform: rotate(360deg);
+                -o-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+
+        @-moz-keyframes spinner {
+            0% {
+                -webkit-transform: rotate(0deg);
+                -moz-transform: rotate(0deg);
+                -ms-transform: rotate(0deg);
+                -o-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+                -moz-transform: rotate(360deg);
+                -ms-transform: rotate(360deg);
+                -o-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+
+        @-o-keyframes spinner {
+            0% {
+                -webkit-transform: rotate(0deg);
+                -moz-transform: rotate(0deg);
+                -ms-transform: rotate(0deg);
+                -o-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+                -moz-transform: rotate(360deg);
+                -ms-transform: rotate(360deg);
+                -o-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes spinner {
+            0% {
+                -webkit-transform: rotate(0deg);
+                -moz-transform: rotate(0deg);
+                -ms-transform: rotate(0deg);
+                -o-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+                -moz-transform: rotate(360deg);
+                -ms-transform: rotate(360deg);
+                -o-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+
+    <!-- Import iTowns source code -->
+    <script src="../dist/itowns.js"></script>
+    <script src="../dist/debug.js"></script>
+    <!-- Import iTowns Widgets plugin -->
+    <script src="../dist/itowns_widgets.js"></script>
+    <!-- Import iTowns LoadingScreen and GuiTools plugins -->
+    <script src="js/GUI/GuiTools.js"></script>
+    <script src="js/GUI/LoadingScreen.js"></script>
+    <script src="../jszip/dist/jszip.min.js"></script>
+    <script src="../FileSaver/dist/FileSaver.min.js"></script>
+    <script>
+        let THREE = itowns.THREE;
+        this.THREE = THREE;
+    </script>
+
+
+<!-- 
+<script src="../node_modules/three/build/three.min.js"></script>
+
+<script >
+this.THREE = THREE;
+
+</script> -->
+
+    <script src="../CubemapToEquirectangular.js"></script>
+
+ 
+<script>
+
+var cubeCamera;
+var equi;
+        // let THREE = itowns.THREE;
+        let container, stats, controls;
+
+        let camera, scene, renderer;
+        var faces = ["px", "nz", "nx", "ny", "py", "pz"];
+
+        var zip = new JSZip();
+
+
+        const rotations = [
+            [new THREE.Vector3(0, 1, 0), -Math.PI / 2], //droite    nx
+            [new THREE.Vector3(0, 1, 0), Math.PI], //derriere   nz
+            [new THREE.Vector3(0, 1, 0), Math.PI / 2], //gauche px
+
+            [new THREE.Vector3(1, 0, 0), -Math.PI / 2], //bas   ny
+            [new THREE.Vector3(1, 0, 0), Math.PI / 2], //haut   py
+
+            [new THREE.Vector3(0, 0, 0), 0], //face pz
+        ];
+
+        
+        var placement = {
+                coord: new itowns.Coordinates('EPSG:4326', 3.695885, 43.397379, 0),
+
+                range: 3000,
+                tilt: 55,
+                heading: 180
+            }
+            // iTowns namespace defined here
+            var viewerDiv = document.getElementById('viewerDiv');
+
+            var view = new itowns.GlobeView(viewerDiv, placement);
+            view.camera.camera3D.near = 5;
+            setupLoadingScreen(viewerDiv, view);
+
+            var menuGlobe = new GuiTools('menuDiv', view, 300);
+
+            function updatePointCloudSize({tileContent}) {
+                tileContent.traverse(function (obj) {
+                    if (obj.isPoints) {
+                        obj.material.size = 2.0;
+                    }
+                });
+            }
+            // Create a new Layer 3d-tiles For Pointcloud
+            // -------------------------------------------
+            var $3dTilesLayerSetePC = new itowns.C3DTilesLayer('3d-tiles-sete', {
+                name: 'SetePC',
+                sseThreshold: 5,
+                // pntsMode: itowns.PNTS_MODE.CLASSIFICATION,
+                source: new itowns.C3DTilesSource({
+                    url: 'https://10.1.23.22/3dtiles/pnts-geredis-fressines-2/tileset.json',
+
+
+                    // url: 'https://raw.githubusercontent.com/iTowns/iTowns2-sample-data/master/pointclouds/pnts-sete-2021-0756_6256/tileset.json',
+                }),
+            }, view);
+
+            $3dTilesLayerSetePC.addEventListener(
+                itowns.C3DTILES_LAYER_EVENTS.ON_TILE_CONTENT_LOADED,
+                updatePointCloudSize,
+            );
+
+            itowns.View.prototype.addLayer.call(view, $3dTilesLayerSetePC);
+            function switchMode(){
+                let pntsLayer = view.getLayerById("3d-tiles-sete");
+                
+                if(pntsLayer){
+                    pntsLayer = pntsLayer;
+                    pntsLayer.pntsMode = pntsLayer.pntsMode == itowns.PNTS_MODE.COLOR ? itowns.PNTS_MODE.CLASSIFICATION : itowns.PNTS_MODE.COLOR;
+                    view.notifyChange(view.camera.camera3D);
+                }
+            }
+        
+        // // Create a GlobeView
+        // const view = new itowns.GlobeView(viewerDiv, placement);
+
+        // // Setup loading screen and debug menu
+        setupLoadingScreen(viewerDiv, view);
+        const debugMenu = new GuiTools("menuDiv", view);
+
+        // ---------- DISPLAY ORTHO-IMAGES : ----------
+
+        // Add one imagery layer to the scene. This layer's properties are defined in a json file, but it could be
+        // defined as a plain js object. See `Layer` documentation for more info.
+        itowns.Fetcher.json("./layers/JSONLayers/Ortho.json").then(
+            function _(config) {
+                config.source = new itowns.WMTSSource(config.source);
+                view.addLayer(new itowns.ColorLayer("Ortho", config)).then(
+                    debugMenu.addLayerGUI.bind(debugMenu)
+                );
+            }
+        );
+
+        // ---------- DISPLAY A DIGITAL ELEVATION MODEL : ----------
+
+        // Add two elevation layers, each with a different level of detail. Here again, each layer's properties are
+        // defined in a json file.
+        function addElevationLayerFromConfig(config) {
+            config.source = new itowns.WMTSSource(config.source);
+            view.addLayer(
+                new itowns.ElevationLayer(config.id, config)
+            ).then(debugMenu.addLayerGUI.bind(debugMenu));
+        }
+        itowns.Fetcher.json(
+            "./layers/JSONLayers/IGN_MNT_HIGHRES.json"
+        ).then(addElevationLayerFromConfig);
+        itowns.Fetcher.json("./layers/JSONLayers/WORLD_DTM.json").then(
+            addElevationLayerFromConfig
+        );
+
+        // ---------- ADD SOME WIDGETS : ----------
+
+        // ADD A SCALE :
+        const scale = new itowns_widgets.Scale(view, {
+            position: "bottom-right",
+            translate: { x: -80 },
+        });
+
+       
+        // ADD NAVIGATION TOOLS :
+        const navigation = new itowns_widgets.Navigation(view, {
+            position: "bottom-right",
+            translate: { y: -40 },
+        });
+
+       
+        // ---------- DISPLAY ATMOSPHERIC LIGHTING : ----------
+
+        const atmosphere = view.getLayerById("atmosphere");
+        atmosphere.setRealisticOn(!view.isDebugMode);
+
+
+
+
+
+
+
+        // ---------- DEBUG TOOLS : ----------
+
+        // Toggle atmospheric lighting on/off.
+        const cRL = debugMenu.addGUI(
+            "RealisticLighting",
+            !view.isDebugMode,
+            function (v) {
+                atmosphere.setRealisticOn(v);
+                view.notifyChange(atmosphere);
+            }
+        );
+
+        debug.createTileDebugUI(debugMenu.gui, view);
+        // Listen for globe full initialisation event
+        // LAYERS_INITIALIZED
+        // INITIALIZED
+        view.addEventListener(
+            // itowns.VIEW_EVENTS.LAYERS_INITIALIZED,
+            itowns.VIEW_EVENTS.INITIALIZED,
+            function () {
+                // eslint-disable-next-line no-console
+                console.info("Globe initialized");
+                // document.querySelector("#savebtn").disabled = false;
+            }
+        );
+
+        // view.addEventListener("testEvent", function () {
+        //     // eslint-disable-next-line no-console
+        //     console.info("test event");
+        // });
+
+        // view.addEventListener("testEvent2222", function () {
+        //     // eslint-disable-next-line no-console
+        //     console.info("test event22222");
+        // });
+
+        view.mainLoop.addEventListener("command-queue-empty", function () {
+            // eslint-disable-next-line no-console
+            console.info("tcommand-queue-empty");
+            const allReady = view.getLayers().every(layer => layer.ready);
+            // // if (!allReady)
+            // //     return;
+            // // if (!(allReady &&
+            // //     view.mainLoop.scheduler.commandsWaitingExecutionCount() == 0))
+            // //     return;
+            // if (!(allReady &&
+            //     view.mainLoop.renderingState == 0))
+            //     return;
+            if (!(allReady &&
+                view.mainLoop.scheduler.commandsWaitingExecutionCount() == 0 &&
+                view.mainLoop.renderingState == 0))     // todo remove 0, crete new event
+                return;
+            console.info("Readddy");
+
+        });
+
+        // view.addEventListener(itowns.GLOBE_VIEW_EVENTS.GLOBE_INITIALIZED, function () {
+        //     Promise.all(promises).then(function () {
+        //         menuGlobe.addImageryLayersGUI(view.getLayers(function (l) { return l.isColorLayer; }));
+        //         itowns.ColorLayersOrdering.moveLayerToIndex(view, 'Ortho', 0);
+        //     }).catch(console.error);
+        // });
+        // cubemap();
+
+        view.addFrameRequester(itowns.MAIN_LOOP_EVENTS.UPDATE_END, function () {
+            // eslint-disable-next-line no-console
+            console.info("test event22222");
+        });
+        document.querySelector("#savebtn").addEventListener("click", save);
+        document.querySelector("#rotate").addEventListener("click", rotate);
+        document.querySelector("#cubemap").addEventListener("click", screen);
+        const loaderContainer = document.querySelector('.loaderDiv');
+        console.log(loaderContainer)
+        camera = view.camera.camera3D;
+
+        camera.updateProjectionMatrix(); var g = view.mainLoop.gfxEngine;
+        renderer = g.renderer;
+
+
+
+
+
+
+
+        var cubeRenderTarget = new THREE.WebGLCubeRenderTarget( 256 );
+				cubeRenderTarget.texture.type = THREE.HalfFloatType;
+
+				var cubeCamera = new THREE.CubeCamera( 1, 1000, cubeRenderTarget );
+
+				//
+
+			/*	var material = new THREE.MeshStandardMaterial( {
+					envMap: cubeRenderTarget.texture,
+					roughness: 0.05,
+					metalness: 1
+				} );
+
+				
+
+				var sphere = new THREE.Mesh( new THREE.IcosahedronGeometry( 15, 8 ), material );
+                // sphere.position = view.camera.camera3D.position;
+                new itowns.Coordinates('EPSG:4326', 3.695885, 43.397379, 50).as("EPSG:4978").toVector3(sphere.position)
+                // debugger;
+                sphere.updateMatrixWorld();
+				view.scene.add( sphere );
+
+
+                // const material2 = new THREE.MeshStandardMaterial( {
+				// 	roughness: 0.1,
+				// 	metalness: 0
+				// } );
+
+                const material2 = new THREE.MeshBasicMaterial( {color: 0xff0000} ); 
+
+				// var cube = new THREE.Mesh( new THREE.BoxGeometry( 15, 15, 15 ), material );
+                // // cube.position.copy(view.camera.camera3D.position);
+
+                // new itowns.Coordinates('EPSG:4326', 3.695885, 43.397379, 50).as("EPSG:4978").toVector3(cube.position)
+                // // debugger;
+                // cube.updateMatrixWorld();
+
+				// view.scene.add( cube );
+
+
+                renderer.setAnimationLoop((timestamp) => {
+               
+                
+                    cubeCamera.update( renderer, view.scene );
+
+                view.mainLoop.step(view, timestamp);
+            });
+
+
+                renderer.render(view.scene, view.camera.camera3D);
+        view.notifyChange(view.camera.camera3D);
+
+
+
+
+
+
+*/
+
+
+        // equi = new CubemapToEquirectangular( renderer, true );
+        equi = new CubemapToEquirectangular( renderer, false );
+
+        var cubeRenderTarget = new THREE.WebGLCubeRenderTarget(2048);
+
+                cubeRenderTarget.texture.type = THREE.HalfFloatType;
+
+                cubeCamera = new THREE.CubeCamera(1, 1000, cubeRenderTarget);
+
+    document.getElementById( 'capture' ).addEventListener( 'click', function( e ) {
+        renderer.render(view.scene, view.camera.camera3D);
+        view.notifyChange(view.camera.camera3D);
+
+// equi.update( camera, view.scene );
+ new itowns.Coordinates('EPSG:4326', 3.695885, 43.397379, 50).as("EPSG:4978").toVector3(cubeCamera.position)
+                // debugger;
+                console.log(cubeCamera.position)
+
+                cubeCamera.position.copy( camera.position );
+                console.log(cubeCamera.position)
+                console.log(camera.position)
+
+                // cubeCamera.updateMatrixWorld();
+                // cubeCamera.updateProjectionMatrix();
+				cubeCamera.update( renderer, view.scene );
+                
+				equi.convert( cubeCamera );
+
+} );
+
+        var i = 0;
+
+     
+
+        var clientSize = new THREE.Vector2();
+        renderer.getSize(clientSize);
+        console.log(clientSize);
+        var fov = camera.fov;
+
+        var aspect = camera.aspect;
+
+        function cubemap() {
+            var dataURL = renderer.domElement.toDataURL("image/png");
+
+            // Extraire les données binaires de l'URL
+            var data = dataURL.split(",")[1];
+            if (i > 0) {
+                camera.rotateOnAxis(
+                    rotations[i - 1][0],
+                    rotations[i - 1][1] * -1.0
+                );
+                // Ajouter les données binaires au fichier zip avec le nom de la face
+                zip.file(faces[i - 1] + ".png", data, { base64: true });
+
+
+            }
+
+            if (i < 6)
+                camera.rotateOnAxis(rotations[i][0], rotations[i][1]);
+
+            view.notifyChange(view.camera.camera3D);
+        }
+
+        function cubemap3() {
+            console.log("herrree " + i);
+            const allReady = view.getLayers().every(layer => layer.ready);
+            // // if (!allReady)
+            // //     return;
+            // // if (!(allReady &&
+            // //     view.mainLoop.scheduler.commandsWaitingExecutionCount() == 0))
+            // //     return;
+            // if (!(allReady &&
+            //     view.mainLoop.renderingState == 0))
+            //     return;
+            if (!(allReady &&
+                view.mainLoop.scheduler.commandsWaitingExecutionCount() == 0 &&
+                view.mainLoop.renderingState == 0))     // todo remove 0, crete new event
+                return;
+            renderer.render(view.scene, view.camera.camera3D);
+            view.notifyChange(view.camera.camera3D);
+
+            if (i > 0) {
+                var dataURL = renderer.domElement.toDataURL("image/png");
+
+                // Extraire les données binaires de l'URL
+                var data = dataURL.split(",")[1];
+                // console.log(dataURL)
+                zip.file(faces[i - 1] + ".png", data, { base64: true });
+                // var file = new File(data, faces[i - 1] + ".png", {
+                //     type: "base64",
+                // });
+                // saveAs(dataURL, faces[i - 1] + ".png"); // Utiliser la fonction saveAs de FileSaver.js
+
+
+
+                // Créer un élément a avec les attributs appropriés
+                // var link = document.createElement("a");
+                // link.href = dataURL;
+                // link.download = "image.png";
+                // link.textContent = "Télécharger " + faces[i - 1];
+                // document.body.appendChild(link);
+
+
+
+                camera.rotateOnAxis(
+                    rotations[i - 1][0],
+                    rotations[i - 1][1] * -1.0
+                );
+                // Ajouter les données binaires au fichier zip avec le nom de la face
+            }
+
+            if (i < 6) {
+                camera.rotateOnAxis(rotations[i][0], rotations[i][1]);
+
+                renderer.render(view.scene, view.camera.camera3D);
+                view.notifyChange(view.camera.camera3D);
+            }
+
+            if (i == 6) {
+                // Générer le fichier zip et le télécharger
+                zip.generateAsync({ type: "blob" }).then(function (blob) {
+                    saveAs(blob, "cubemappng.zip"); // Utiliser la fonction saveAs de FileSaver.js
+                });
+                endCubemap();
+                i = 0;
+            } else i++;
+        }
+
+        var k = 0;
+        function rotate() {
+            if (k > 0)
+                camera.rotateOnAxis(
+                    rotations[k - 1][0],
+                    rotations[k - 1][1] * -1.0
+                );
+            camera.rotateOnAxis(rotations[k][0], rotations[k][1]);
+
+            renderer.render(view.scene, view.camera.camera3D);
+            view.notifyChange(view.camera.camera3D);
+            console.log(view.controls.getLookAtCoordinate());
+
+            // view.camera.camera3D.updateProjectionMatrix();
+
+            k = k == 5 ? 0 : k + 1;
+        }
+        function initCubemap() {
+            loaderContainer.style.display = 'block';
+
+            renderer.setSize(1024, 1024);
+
+            // https://observablehq.com/@grantcuster/understanding-scale-and-the-three-js-perspective-camera
+
+            camera.fov = 90;
+            camera.aspect = 1.0;
+
+            // var horizontalFov = 90;
+            // camera.fov = (Math.atan(Math.tan(((horizontalFov / 2) * Math.PI) / 180) / camera.aspect) * 2 * 180) / Math.PI;
+            // console.log(camera.fov)
+
+
+            camera.updateProjectionMatrix();
+            // view.mainLoop.addEventListener("command-queue-empty", cubemap3);
+            view.mainLoop.addEventListener("command-queue-empty", toCube);
+
+            renderer.render(view.scene, view.camera.camera3D);
+            view.notifyChange(view.camera.camera3D);
+
+
+
+
+
+        }
+
+        function toCube() {
+
+            setTimeout(function () {
+
+                cubemap3();
+
+            }, 5000);
+
+        }
+
+        function endCubemap() {
+            view.mainLoop.removeEventListener("command-queue-empty", cubemap3);
+
+            view.mainLoop.removeEventListener("command-queue-empty", toCube);
+
+
+            renderer.setSize(clientSize.x, clientSize.y);
+            camera.fov = fov;
+            camera.aspect = aspect;
+            camera.updateProjectionMatrix();
+            renderer.render(view.scene, view.camera.camera3D);
+            view.notifyChange(view.camera.camera3D);
+            loaderContainer.style.display = 'none';
+
+        }
+        function save() {
+
+
+            initCubemap();
+
+        }
+
+        function save2() {
+
+
+            initCubemap();
+            // cubemap3();
+        }
+
+        function save3() {
+
+
+            if (i == 0)
+                initCubemap();
+            else
+                cubemap3();
+        }
+
+
+    </script>
+</body>
+
+</html>

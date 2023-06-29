@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>three.js webgl - materials - dynamic cube reflection</title>
         <meta charset="utf-8" />
         <meta
             name="viewport"
@@ -9,7 +8,7 @@
         />
         <!-- <link type="text/css" rel="stylesheet" href="main.css" /> -->
         <style>
-            body {
+             body {
                 margin: 0;
                 background-color: #000;
                 color: #fff;
@@ -19,103 +18,14 @@
                 overscroll-behavior: none;
             }
 
-            a {
-                color: #ff0;
-                text-decoration: none;
-            }
-
-            a:hover {
-                text-decoration: underline;
-            }
-
-            button {
-                cursor: pointer;
-                text-transform: uppercase;
-            }
-
-            #info {
-                position: absolute;
-                top: 0px;
-                width: 100%;
-                padding: 10px;
-                box-sizing: border-box;
-                text-align: center;
-                -moz-user-select: none;
-                -webkit-user-select: none;
-                -ms-user-select: none;
-                user-select: none;
-                pointer-events: none;
-                z-index: 1; /* TODO Solve this in HTML */
-            }
-
-            a,
-            button,
-            input,
-            select {
-                pointer-events: auto;
-            }
-
-            .lil-gui {
-                z-index: 2 !important; /* TODO Solve this in HTML */
-            }
-
-            @media all and (max-width: 640px) {
-                .lil-gui.root {
-                    right: auto;
-                    top: auto;
-                    max-height: 50%;
-                    max-width: 80%;
-                    bottom: 0;
-                    left: 0;
-                }
-            }
-
-            #overlay {
-                position: absolute;
-                font-size: 16px;
-                z-index: 2;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                flex-direction: column;
-                background: rgba(0, 0, 0, 0.7);
-            }
-
-            #overlay button {
-                background: transparent;
-                border: 0;
-                border: 1px solid rgb(255, 255, 255);
-                border-radius: 4px;
-                color: #ffffff;
-                padding: 12px 18px;
-                text-transform: uppercase;
-                cursor: pointer;
-            }
-
-            #notSupported {
-                width: 50%;
-                margin: auto;
-                background-color: #f00;
-                margin-top: 20px;
-                padding: 10px;
-            }
-
+          
             body {
                 touch-action: none;
-            }
+            } 
         </style>
     </head>
     <body>
-        <div id="info">
-            <a href="https://threejs.org" target="_blank" rel="noopener"
-                >three.js webgl</a
-            >
-            - materials - dynamic cube reflection
-        </div>
+        
 
         <!-- Import maps polyfill -->
         <!-- Remove this when import maps will be widely supported -->
@@ -153,6 +63,9 @@
             let cubeCamera, cubeRenderTarget;
 
             let controls;
+            let isText1 = true;
+            let texture;
+            let texture2;
 
             init();
 
@@ -181,7 +94,6 @@
                 camera.position.z = 75;
 
                 scene = new THREE.Scene();
-                // scene.rotation.y = 0.5; // avoid flying objects occluding the sun
 
                 // new RGBELoader()
                 // 	.setPath("textures/equirectangular/")
@@ -194,23 +106,23 @@
 
                 //
 
-                const rgbmUrls = [
-                    "nx.png",
-                    "px.png",
-                    "py.png",
-                    "ny.png",
-                    "pz.png",
-                    "nz.png",
-                ];
+                // const rgbmUrls = [
+                //     "nx.png",
+                //     "px.png",
+                //     "py.png",
+                //     "ny.png",
+                //     "pz.png",
+                //     "nz.png",
+                // ];
 
-            //     const rgbmUrls = [
-            //     "px.png",
-            //     "nx.png",
-            //     "py.png",
-            //     "ny.png",
-            //     "pz.png",
-            //     "nz.png",
-            // ];
+                const rgbmUrls = [
+                "px.png",
+                "nx.png",
+                "py.png",
+                "ny.png",
+                "pz.png",
+                "nz.png",
+            ];
 
                 // const rgbmUrls = [
                 // 	"px.png",
@@ -234,80 +146,37 @@
                 // 	.setPath("../cubemappng/")
                 // 	.loadCubemap(rgbmUrls);
 
-                const texture = new THREE.CubeTextureLoader()
+                texture = new THREE.CubeTextureLoader()
                     .setPath("./cubemaps/cubemappng/")
                     .load(rgbmUrls);
 
-                // .load(["px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png"]);
 
-                texture.name = "pisaRGBM16";
-                // texture.minFilter = THREE.LinearMipmapLinearFilter;
-                // texture.magFilter = THREE.LinearFilter;
-                // const texture2 = new THREE.CubeTextureLoader()
-                //     .setPath("./cubemaps/orginals_park/")
-                //     .load([
-                //         "px.jpg",
-                //         "nx.jpg",
-                //         "py.jpg",
-                //         "ny.jpg",
-                //         "pz.jpg",
-                //         "nz.jpg",
-                //     ]);
                 scene.background = texture;
 
                 scene.environment = texture;
 
-                // cubeRenderTarget = new THREE.WebGLCubeRenderTarget(256);
-                cubeRenderTarget = new THREE.WebGLCubeRenderTarget(1024);
+              
 
-                cubeRenderTarget.texture.type = THREE.HalfFloatType;
-
-                cubeCamera = new THREE.CubeCamera(1, 1000, cubeRenderTarget);
-
-                //
-
-                material = new THREE.MeshStandardMaterial({
-                    envMap: cubeRenderTarget.texture,
-                    roughness: 0.05,
-                    metalness: 1,
-                });
+                
 
                 const gui = new GUI();
-                gui.add(material, "roughness", 0, 1);
-                gui.add(material, "metalness", 0, 1);
                 gui.add(renderer, "toneMappingExposure", 0, 2).name("exposure");
 
 
-                /*
-                sphere = new THREE.Mesh(
-                    new THREE.IcosahedronGeometry(15, 8),
-                    material
-                );
-                scene.add(sphere);
-
-                const material2 = new THREE.MeshStandardMaterial({
-                    roughness: 0.1,
-                    metalness: 0,
-                });
-
-                cube = new THREE.Mesh(
-                    new THREE.BoxGeometry(15, 15, 15),
-                    material2
-                );
-                scene.add(cube);
-
-                torus = new THREE.Mesh(
-                    new THREE.TorusKnotGeometry(8, 3, 128, 16),
-                    material2
-                );
-                scene.add(torus);
-
-                */
-
+          
                 //
 
                 controls = new OrbitControls(camera, renderer.domElement);
-                // controls.autoRotate = true;
+
+
+                document.addEventListener(
+  "click",
+  switchScene);
+
+                texture2 = new THREE.CubeTextureLoader()
+                    .setPath("./cubemaps/cubemappngWork/")
+                    .load(rgbmUrls);
+
             }
 
             function onWindowResized() {
@@ -318,23 +187,8 @@
             }
 
             function animation(msTime) {
-              /*  const time = msTime / 1000;
 
-                cube.position.x = Math.cos(time) * 30;
-                cube.position.y = Math.sin(time) * 30;
-                cube.position.z = Math.sin(time) * 30;
-
-                cube.rotation.x += 0.02;
-                cube.rotation.y += 0.03;
-
-                torus.position.x = Math.cos(time + 10) * 30;
-                torus.position.y = Math.sin(time + 10) * 30;
-                torus.position.z = Math.sin(time + 10) * 30;
-
-                torus.rotation.x += 0.02;
-                torus.rotation.y += 0.03;
-*/
-                cubeCamera.update(renderer, scene);
+                // cubeCamera.update(renderer, scene);
 
                 controls.update();
 
@@ -342,6 +196,27 @@
 
                 stats.update();
             }
+
+
+           
+
+            function switchScene(e) {           
+                if (e.target.id == "VRButton")
+                return
+
+                if(isText1){
+                    scene.background = texture2;
+
+                    scene.environment = texture2;
+                }else{
+                    scene.background = texture;
+
+                    scene.environment = texture;
+                }
+                isText1 = !isText1;
+
+            }
+
         </script>
     </body>
 </html>
