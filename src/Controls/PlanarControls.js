@@ -237,7 +237,7 @@ class PlanarControls extends THREE.EventDispatcher {
         this.minResolution = options.minResolution || defaultOptions.minResolution;
 
         // approximate ground altitude value. Camera altitude is clamped above groundLevel
-        this.groundLevel = options.groundLevel || defaultOptions.groundLevel;
+        this.groundLevel = -10000;
 
         // min and max duration in seconds, for animated travels with `auto` parameter
         this.autoTravelTimeMin = options.autoTravelTimeMin || defaultOptions.autoTravelTimeMin;
@@ -277,6 +277,8 @@ class PlanarControls extends THREE.EventDispatcher {
         // set collision options
         this.handleCollision = options.handleCollision === undefined ?
             defaultOptions.handleCollision : options.handleCollision;
+
+        this.handleCollision = false;
         this.minDistanceCollision = defaultOptions.minDistanceCollision;
 
         // enable smart travel

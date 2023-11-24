@@ -36,6 +36,7 @@ export default {
     getElevationValueAt(layer, coord, method = FAST_READ_Z, tileHint) {
         const result = _readZ(layer, method, coord, tileHint || layer.level0Nodes);
         if (result) {
+            console.log(result.coord.z);
             return result.coord.z;
         }
     },

@@ -125,6 +125,7 @@ class GlobeView extends View {
         } else {
             this.controls = new GlobeControls(this, placement, options.controls);
             this.controls.handleCollision = typeof (options.handleCollision) !== 'undefined' ? options.handleCollision : true;
+            this.controls.handleCollision = false;
         }
 
         this.addLayer(new Atmosphere('atmosphere', options.atmosphere));

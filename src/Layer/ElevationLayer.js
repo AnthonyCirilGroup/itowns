@@ -67,7 +67,7 @@ class ElevationLayer extends RasterLayer {
         this.zmin = config.clampValues?.min ?? config.zmin;
         this.zmax = config.clampValues?.max ?? config.zmax;
         this.isElevationLayer = true;
-        this.defineLayerProperty('scale', this.scale || 1.0);
+        this.defineLayerProperty('scale', this.scale || 10.0);
     }
 
     /**

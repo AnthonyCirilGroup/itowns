@@ -60,22 +60,24 @@ Controllers.addControllers = (_view, _contextXR) => {
     controller2.addEventListener( 'selectstart', onSelectRightStart);
     controller2.addEventListener( 'selectend', onSelectRightEnd);
 
-    const cameraRightCtrl = new itowns.THREE.PerspectiveCamera(view.camera.camera3D.fov);
-    cameraRightCtrl.position.copy(view.camera.camera3D.position);
-    const cameraRighthelper = new itowns.THREE.CameraHelper(cameraRightCtrl);
+    // const cameraRightCtrl = new itowns.THREE.PerspectiveCamera(view.camera.camera3D.fov);
+    // cameraRightCtrl.position.copy(view.camera.camera3D.position);
+    // const cameraRighthelper = new itowns.THREE.CameraHelper(cameraRightCtrl);
+    //
+    // XRUtils.addToScene (cameraRighthelper, true);
+    //
+    //
+    // contextXR.cameraRightGrp = { camera : cameraRightCtrl, cameraHelper : cameraRighthelper };
 
-    XRUtils.addToScene (cameraRighthelper, true);
-
-    
-    contextXR.cameraRightGrp = { camera : cameraRightCtrl, cameraHelper : cameraRighthelper };
-    
     contextXR.controller1 = controller1;
     contextXR.controller2 = controller2;
 };
 
 Controllers.getGeodesicalQuaternion = () => {
     // TODO can be optimized with better cache
-    const position = view.controls.getCameraCoordinate().clone().as(view.referenceCrs);
+    // const position = view.controls.getCameraCoordinate().clone().as(view.referenceCrs);
+    const position =  new itowns.Coordinates('EPSG:4978',  view.camera.camera3D.position).as('EPSG:4326').clone().as(view.referenceCrs);
+
     const geodesicNormal = new itowns.THREE.Quaternion().setFromUnitVectors(new itowns.THREE.Vector3(0, 0, 1), position.geodesicNormal).invert();
     return new itowns.THREE.Quaternion(-1, 0, 0, 1).normalize().multiply(geodesicNormal);
 };
@@ -85,8 +87,9 @@ function bindListeners(index) {
 }
 
 function clampAndApplyTransformationToXR(trans, offsetRotation) {
-    const transClamped = clampToGround(trans);
-    applyTransformationToXR(transClamped, offsetRotation);
+    // const transClamped = clampToGround(trans);
+    // applyTransformationToXR(transClamped, offsetRotation);
+    applyTransformationToXR(trans, offsetRotation);
 }
 
 
@@ -133,7 +136,7 @@ function onSelectLeftStart() {
     navigationMode[currentNavigationModeIndex].onSelectLeftStart(this);
 }
 
-function onSelectRightEnd() { 
+function onSelectRightEnd() {
     navigationMode[currentNavigationModeIndex].onSelectRightEnd(this);
 }
 
@@ -240,7 +243,7 @@ function switchDebugMode() {
 
 Controllers.change3DTileRepresentation = function() {
     let pntsLayer = view.getLayerById("3d-tiles-geredis");
-                
+
     if(pntsLayer){
         pntsLayer = pntsLayer;
         pntsLayer.pntsMode = pntsLayer.pntsMode == itowns.PNTS_MODE.COLOR ? itowns.PNTS_MODE.CLASSIFICATION : itowns.PNTS_MODE.COLOR;
@@ -267,13 +270,13 @@ function applyTeleportation(ctrl) {
         applyTransformationToXR(trans, offsetRotation);
         // cache.geodesicNormal = null;
     }
-}   
+}
 
 
 
    /**
 function setCameraTocontroller() {
- 
+
     //TODO debug this
     if(!contextXR.controllerCameraRelativePos) {
         contextXR.originalPosition = contextXR.cameraRightGrp.camera.position.clone();
@@ -282,7 +285,7 @@ function setCameraTocontroller() {
         contextXR.controllerCameraRelativePos = contextXR.originalPosition.clone().sub(view.camera.camera3D.position);
     }
     var quat = new itowns.THREE.Quaternion().setFromEuler(contextXR.cameraRightGrp.camera.rotation);
-    
+
     const transform = new XRRigidTransform( contextXR.originalPosition.clone().add(contextXR.controllerCameraRelativePos).applyQuaternion(quat), quat );
     const teleportSpaceOffset = contextXR.baseReferenceSpace.getOffsetReferenceSpace( transform );
     renderer.xr.setReferenceSpace( teleportSpaceOffset );
@@ -290,6 +293,7 @@ function setCameraTocontroller() {
 
 function getSpeedFactor() {
     const speedFactor = Math.min(Math.max(view.camera.elevationToGround / 10, 5), 2000);
+    console.log(view.camera.elevationToGround)
     return speedFactor;
 }
 
@@ -303,7 +307,7 @@ function getTranslationZ(axisValue, speedFactor) {
 }
 
 function printPosition() {
-    console.log('pos:', view.camera.camera3D.position, 'rot:', Controllers.getGeodesicalQuaternion()); 
+    console.log('pos:', view.camera.camera3D.position, 'rot:', Controllers.getGeodesicalQuaternion());
 }
 
 function switchRegisteredCoordinates() {
@@ -314,7 +318,7 @@ function switchRegisteredCoordinates() {
     }
     applyTransformationToXR(savedCoordinates[indexSavedCoordinates-1].coords.toVector3(), savedCoordinates[indexSavedCoordinates-1].rotation);
 }
-              
+
 
 // ////////////////////////////////// MODE 1
 
@@ -333,7 +337,10 @@ function getRotationYaw(axisValue) {
 
 function getTranslationElevation(axisValue, speedFactor) {
     const speed = axisValue * speedFactor;
-    const direction = view.controls.getCameraCoordinate().geodesicNormal.clone();
+    // const direction = view.controls.getCameraCoordinate().geodesicNormal.clone();
+    const direction =  new itowns.Coordinates('EPSG:4978',  view.camera.camera3D.position).as('EPSG:4326').geodesicNormal.clone();
+
+
     direction.multiplyScalar(-speed);
     return direction;
 }
@@ -365,7 +372,7 @@ function cameraOnFly(ctrl) {
         const speed = ctrl.gamepad.axes[2] * speedFactor;
         directionX = new itowns.THREE.Vector3(1, 0, 0).applyQuaternion(ctrl.flyDirectionQuat).multiplyScalar(speed);
     }
-    
+
     const offsetRotation = Controllers.getGeodesicalQuaternion();
     const trans = view.camera.camera3D.position.clone().add(directionX.add(directionY));
     clampAndApplyTransformationToXR(trans, offsetRotation);
@@ -395,7 +402,7 @@ const Mode1 = {
         const ctrl = data.message.controller;
         if (data.message.buttonIndex === 1) {
             // activate vertical adjustment
-            if(ctrl.gamepad.axes[3] === 0) {
+            if (ctrl.gamepad.axes[3] === 0) {
                 return;
             }
             // disable clip to ground
@@ -405,6 +412,7 @@ const Mode1 = {
             const deltaTransl = getTranslationElevation(ctrl.gamepad.axes[3], speedFactor);
             const trans = view.camera.camera3D.position.clone().add(deltaTransl);
             clampAndApplyTransformationToXR(trans, offsetRotation);
+            console.log('onRightButtonPressed');
         }
     },
     onLeftButtonPressed: (data) => {
@@ -423,6 +431,7 @@ const Mode1 = {
             // updating elevation at intersection destination
             contextXR.deltaAltitude -= ctrl.gamepad.axes[3] * 100;
         } else {
+            console.log('onRightAxisChanged');
             cameraOnFly(ctrl);
         }
     },
@@ -435,7 +444,7 @@ const Mode1 = {
             const trans = view.camera.camera3D.position.clone();
             const quat = getRotationYaw(ctrl.gamepad.axes[2]);
             applyTransformationToXR(trans, quat);
-        } 
+        }
     },
     onRightAxisStop: (data) => {
         // inop
@@ -445,6 +454,8 @@ const Mode1 = {
     },
     onRightButtonReleased: (data) => {
         // inop
+        console.log("onRightButtonReleased")
+
         if(data.message.buttonIndex === 4) {
             switchRegisteredCoordinates();
         }
@@ -470,7 +481,7 @@ const Mode2 = {
     /**
      * first left click while right selecting locks the teleportation target
      * Second left click cancels teleportation target.
-     * @param {*} ctrl 
+     * @param {*} ctrl
      */
     onSelectLeftEnd: (ctrl) => {
         if (contextXR.controller2.userData.lockedTeleportPosition) {
@@ -563,7 +574,7 @@ const Mode2 = {
         } else {
             actionElevationPerformed = false;
         }
-        
+
     },
     onLeftButtonReleased: (data) => {
         // inop

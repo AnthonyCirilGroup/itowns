@@ -212,7 +212,7 @@ class GlobeControls extends THREE.EventDispatcher {
         this.zoomFactor = options.zoomFactor || 1.25;
 
         // Limits to how far you can dolly in and out ( PerspectiveCamera only )
-        this.minDistance = options.minDistance || 250;
+        this.minDistance = -250;
         this.maxDistance = options.maxDistance || ellipsoidSizes.x * 8.0;
 
         // Limits to how far you can zoom in and out ( OrthographicCamera only )
@@ -238,8 +238,8 @@ class GlobeControls extends THREE.EventDispatcher {
 
         // Set collision options
         this.handleCollision = typeof (options.handleCollision) !== 'undefined' ? options.handleCollision : true;
-        this.minDistanceCollision = 60;
-
+        this.minDistanceCollision = -60;
+        this.handleCollision = false;
         // this.enableKeys property has moved to StateControl
         Object.defineProperty(this, 'enableKeys', {
             get: () => this.states.enableKeys,
@@ -509,11 +509,11 @@ class GlobeControls extends THREE.EventDispatcher {
                 this.camera.position.setFromSpherical(spherical);
 
                 // if camera is underground, so move up camera
-                if (minDistanceZ < 0) {
-                    this.camera.position.y -= minDistanceZ;
-                    spherical.setFromVector3(this.camera.position);
-                    sphericalDelta.phi = 0;
-                }
+                // if (minDistanceZ < 0) {
+                //     this.camera.position.y -= minDistanceZ;
+                //     spherical.setFromVector3(this.camera.position);
+                //     sphericalDelta.phi = 0;
+                // }
 
                 cameraTarget.localToWorld(this.camera.position);
             }

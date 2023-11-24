@@ -43,9 +43,9 @@ const initializeWebXR = (view, options) => {
 
         view.scene.scale.multiplyScalar(scale);
         view.scene.updateMatrixWorld();
-        
+
         const xrControllers = initControllers(xr, vrHeadSet);
-        
+
         const position = view.controls.getCameraCoordinate().as(view.referenceCrs);
         // To avoid controllers precision issues, headset should handle camera position and camera should be reset to origin
         view.scene.add(vrHeadSet);
@@ -65,7 +65,7 @@ const initializeWebXR = (view, options) => {
         const baseReferenceSpace = xr.getReferenceSpace();
         const teleportSpaceOffset = baseReferenceSpace.getOffsetReferenceSpace(transform);
         // there it is not anymore : originOffset Matrix is :  4485948.5, 476198.03125, 4497216
-          
+
         // Must delay replacement to allow user listening to sessionstart to get original ReferenceSpace
         setTimeout(() => {
              xr.setReferenceSpace(teleportSpaceOffset);
@@ -77,13 +77,19 @@ const initializeWebXR = (view, options) => {
         view.camera.camera3D.far = 100;
         view.camera.resize(view.camera.width, view.camera.height);
         vrHeadSet.add(view.camera.camera3D);
+        let first = true;
 
         document.addEventListener('keydown', exitXRSession, false);
 
         // TODO Fix asynchronization between xr and MainLoop render loops.
         // (see MainLoop#scheduleViewUpdate).
         xr.setAnimationLoop((timestamp) => {
-            if (xr.isPresenting && view.camera.camera3D.cameras[0]) {
+            if (xr.isPresenting && ((first && view.camera.camera3D) || (!first && view.camera.camera3D))) {
+
+                if (first) {
+                    view.camera.camera3D = view.camera.camera3D.cameras[0];
+                    first = false;
+                }
 
                 if (xrControllers.left) {
                     listenGamepad(xrControllers.left);
@@ -92,7 +98,7 @@ const initializeWebXR = (view, options) => {
                     listenGamepad(xrControllers.right);
                 }
 
-                resyncControlCamera();
+                // resyncControlCamera();
 
                 if (view.scene.matrixWorldAutoUpdate === true) {
                     view.scene.updateMatrixWorld();
@@ -120,13 +126,17 @@ const initializeWebXR = (view, options) => {
 
     function computeDistanceToGround() {
         // view.controls.getCameraCoordinate().altitude updates are not triggered
-        const vectorPostion = new THREE.Vector3().setFromMatrixPosition(view.camera.camera3D.matrixWorld);
-        const coordsCamera = new Coordinates(view.referenceCrs, vectorPostion.x, vectorPostion.y, vectorPostion.z);
-        const elevation = DEMUtils.getElevationValueAt(view.tileLayer, coordsCamera, DEMUtils.PRECISE_READ_Z);
-        const coords = coordsCamera.as(view.controls.getCameraCoordinate().crs);
-        view.camera.elevationToGround = coords.altitude - elevation;
-        view.camera.testPosition = vectorPostion;
-        view.camera.projectedCoordinates = coords;
+        // const vectorPostion = new THREE.Vector3().setFromMatrixPosition(view.camera.camera3D.matrixWorld);
+        // const coordsCamera = new Coordinates(view.referenceCrs, vectorPostion.x, vectorPostion.y, vectorPostion.z);
+        // const elevation = DEMUtils.getElevationValueAt(view.tileLayer, coordsCamera, DEMUtils.PRECISE_READ_Z);
+        // const coords = coordsCamera.as(view.controls.getCameraCoordinate().crs);
+        // view.camera.camera3D.
+
+        // view.camera.elevationToGround =  view.camera.position().as('EPSG:4326').altitude;
+        view.camera.elevationToGround =   new Coordinates('EPSG:4978',  view.camera.camera3D.position).as('EPSG:4326').altitude;
+        // view.camera.elevationToGround = coords.altitude - elevation;
+        // view.camera.testPosition = vectorPostion;
+        // view.camera.projectedCoordinates = coords;
     }
 
     function updateFarDistance() {
@@ -135,10 +145,10 @@ const initializeWebXR = (view, options) => {
 
     /*
     Listening {XRInputSource} and emit changes for convenience user binding
-    Adding a few internal states for reactivity 
+    Adding a few internal states for reactivity
     - controller.lockButtonIndex    {number} when a button is pressed, gives its index
     - controller.isStickActive      {boolean} true when a controller stick is not on initial state.
-    - 
+    -
     */
     function listenGamepad(controller) {
         if (controller.gamepad) {
