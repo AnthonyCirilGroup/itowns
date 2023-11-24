@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { XRControllerModelFactory } from  'ThreeExtended/webxr/XRControllerModelFactory';
 import Coordinates from 'Core/Geographic/Coordinates';
 import DEMUtils from 'Utils/DEMUtils';
+import { ellipsoidSizes } from 'Core/Math/Ellipsoid';
 
 async function shutdownXR(session) {
     if (session) {
@@ -43,9 +44,9 @@ const initializeWebXR = (view, options) => {
 
         view.scene.scale.multiplyScalar(scale);
         view.scene.updateMatrixWorld();
-        
+
         const xrControllers = initControllers(xr, vrHeadSet);
-        
+
         const position = view.controls.getCameraCoordinate().as(view.referenceCrs);
         // To avoid controllers precision issues, headset should handle camera position and camera should be reset to origin
         view.scene.add(vrHeadSet);
@@ -65,14 +66,13 @@ const initializeWebXR = (view, options) => {
         const baseReferenceSpace = xr.getReferenceSpace();
         const teleportSpaceOffset = baseReferenceSpace.getOffsetReferenceSpace(transform);
         // there it is not anymore : originOffset Matrix is :  4485948.5, 476198.03125, 4497216
-          
+
         // Must delay replacement to allow user listening to sessionstart to get original ReferenceSpace
         setTimeout(() => {
              xr.setReferenceSpace(teleportSpaceOffset);
              // does a regression over controller matrixWorld update...
          });
         view.notifyChange();
-
         view.camera.camera3D = xr.getCamera();
         view.camera.camera3D.far = 100;
         view.camera.resize(view.camera.width, view.camera.height);
@@ -85,6 +85,11 @@ const initializeWebXR = (view, options) => {
         xr.setAnimationLoop((timestamp) => {
             if (xr.isPresenting && view.camera.camera3D.cameras[0]) {
 
+
+                view.camera.camera3D.near = Math.max(15.0, 0.000002352 * ellipsoidSizes.x);
+                view.camera.camera3D.far = ellipsoidSizes.x * 10;
+                //
+                // console.log(view.camera.camera3D.far);
                 if (xrControllers.left) {
                     listenGamepad(xrControllers.left);
                 }
@@ -99,7 +104,8 @@ const initializeWebXR = (view, options) => {
                 }
 
                 computeDistanceToGround();
-                updateFarDistance();
+                // updateFarDistance();
+
                 if (options.callback) {
                     options.callback();
                 }
@@ -123,15 +129,18 @@ const initializeWebXR = (view, options) => {
     }
 
     function updateFarDistance() {
-        view.camera.camera3D.far =  Math.min(Math.max(view.camera.elevationToGround * 1000, 10000), 100000);
+        // view.camera.camera3D.far =  Math.min(Math.max(view.camera.elevationToGround * 1000, 10000), 100000);
+        view.camera.camera3D.far = 100000;
+
+        // view.camera.camera3D.updateProjectionMatrix();
     }
 
     /*
     Listening {XRInputSource} and emit changes for convenience user binding
-    Adding a few internal states for reactivity 
+    Adding a few internal states for reactivity
     - controller.lockButtonIndex    {number} when a button is pressed, gives its index
     - controller.isStickActive      {boolean} true when a controller stick is not on initial state.
-    - 
+    -
     */
     function listenGamepad(controller) {
         if (controller.gamepad) {
