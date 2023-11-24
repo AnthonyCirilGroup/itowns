@@ -124,6 +124,7 @@ const initializeWebXR = (view, options) => {
         view.controls.camera.rotation.copy(view.camera.camera3D.rotation);
     }
 
+
     function computeDistanceToGround() {
         // view.controls.getCameraCoordinate().altitude updates are not triggered
         // const vectorPostion = new THREE.Vector3().setFromMatrixPosition(view.camera.camera3D.matrixWorld);
@@ -140,7 +141,9 @@ const initializeWebXR = (view, options) => {
     }
 
     function updateFarDistance() {
-        view.camera.camera3D.far =  Math.min(Math.max(view.camera.elevationToGround * 1000, 10000), 100000);
+        // view.camera.camera3D.far =  Math.min(Math.max(view.camera.elevationToGround * 1000, 10000), 100000);
+        // console.log(view.camera.camera3D.far);
+        view.camera.camera3D.far = 10000;
     }
 
     /*

@@ -99,23 +99,23 @@
 
             // Create a new Layer 3d-tiles For Pointcloud
             // -------------------------------------------
-            contextXR.pointLayer = new itowns.C3DTilesLayer('3d-tiles-geredis', {
-                name: 'geredis',
-                sseThreshold: 5,
-                pntsMode: itowns.PNTS_MODE.CLASSIFICATION,
-                source: new itowns.C3DTilesSource({
-                    url: 'https://10.1.23.22/3dtiles/demo_point_cloud/tileset.json',
-                }),
-            }, view);
-
-            contextXR.pointLayer.addEventListener(
-                itowns.C3DTILES_LAYER_EVENTS.ON_TILE_CONTENT_LOADED,
-                updatePointCloudSize,
-            );
-            contextXR.interactiveLayers.push(contextXR.pointLayer.object3d);
-
-            // view.addLayer(contextXR.pointLayer); doesn't work. Those little thing that takes time to figure out
-            itowns.View.prototype.addLayer.call(view, contextXR.pointLayer);
+            // contextXR.pointLayer = new itowns.C3DTilesLayer('3d-tiles-geredis', {
+            //     name: 'geredis',
+            //     sseThreshold: 5,
+            //     pntsMode: itowns.PNTS_MODE.CLASSIFICATION,
+            //     source: new itowns.C3DTilesSource({
+            //         url: 'https://10.1.23.22/3dtiles/demo_point_cloud/tileset.json',
+            //     }),
+            // }, view);
+            //
+            // contextXR.pointLayer.addEventListener(
+            //     itowns.C3DTILES_LAYER_EVENTS.ON_TILE_CONTENT_LOADED,
+            //     updatePointCloudSize,
+            // );
+            // contextXR.interactiveLayers.push(contextXR.pointLayer.object3d);
+            //
+            // // view.addLayer(contextXR.pointLayer); doesn't work. Those little thing that takes time to figure out
+            // itowns.View.prototype.addLayer.call(view, contextXR.pointLayer);
 
 
             function updatePointCloudSize({tileContent}) {
@@ -459,7 +459,7 @@
             // Add the UI Debug
             var d = new debug.Debug(view, menuGlobe.gui);
             debug.createTileDebugUI(menuGlobe.gui, view, view.tileLayer, d);
-            debug.create3dTilesDebugUI(menuGlobe.gui, view, contextXR.pointLayer, d);
+            // debug.create3dTilesDebugUI(menuGlobe.gui, view, contextXR.pointLayer, d);
 
             d.switch = function() {
                 Controllers.change3DTileRepresentation();
@@ -475,9 +475,9 @@
                 var elevationLayer = new itowns.ElevationLayer(config.id, config);
                 view.addLayer(elevationLayer).then(menuGlobe.addLayerGUI.bind(menuGlobe));
             }
-            itowns.Fetcher.json('./layers/JSONLayers/IGN_MNT_HIGHRES.json').then(addElevationLayerFromConfig);
-            // must keep it, Failed to execute 'updateRenderState' on 'XRSession': Failed to read the 'depthFar' property from 'XRRenderStateInit': The provided double value is non-finite.
-            itowns.Fetcher.json('./layers/JSONLayers/WORLD_DTM.json').then(addElevationLayerFromConfig);
+            // itowns.Fetcher.json('./layers/JSONLayers/IGN_MNT_HIGHRES.json').then(addElevationLayerFromConfig);
+            // // must keep it, Failed to execute 'updateRenderState' on 'XRSession': Failed to read the 'depthFar' property from 'XRRenderStateInit': The provided double value is non-finite.
+            // itowns.Fetcher.json('./layers/JSONLayers/WORLD_DTM.json').then(addElevationLayerFromConfig);
         </script>
     </body>
 </html>

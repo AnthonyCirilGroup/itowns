@@ -293,7 +293,7 @@ function setCameraTocontroller() {
 
 function getSpeedFactor() {
     const speedFactor = Math.min(Math.max(view.camera.elevationToGround / 10, 5), 2000);
-    console.log(view.camera.elevationToGround)
+    // console.log(view.camera.elevationToGround)
     return speedFactor;
 }
 
@@ -423,6 +423,8 @@ const Mode1 = {
     },
     onRightAxisChanged: (data) => {
         const ctrl = data.message.controller;
+        console.log('onRightAxisChanged');
+
         // translation controls
         if (ctrl.lockButtonIndex) {
             return;
@@ -431,7 +433,6 @@ const Mode1 = {
             // updating elevation at intersection destination
             contextXR.deltaAltitude -= ctrl.gamepad.axes[3] * 100;
         } else {
-            console.log('onRightAxisChanged');
             cameraOnFly(ctrl);
         }
     },
