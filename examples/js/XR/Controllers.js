@@ -419,7 +419,7 @@ function cameraOnFly(ctrl) {
     // const offsetRotation = view.camera.camera3D.quaternion.clone().normalize().invert();
     //pb ici, perte de rotation
     const trans = view.camera.camera3D.position.clone().add(directionX.add(directionY));
-    clampAndApplyTransformationToXR(trans, offsetRotation);
+    // clampAndApplyTransformationToXR(trans, offsetRotation);
     console.log(flyDirectionQuat.clone())
     //Bonne piste
     clampAndApplyTransformationToXR(trans,  flyDirectionQuat.clone().invert());
