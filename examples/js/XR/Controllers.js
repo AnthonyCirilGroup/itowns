@@ -81,8 +81,6 @@ Controllers.getGeodesicalQuaternion = () => {
     const geodesicNormal = new itowns.THREE.Quaternion().setFromUnitVectors(new itowns.THREE.Vector3(0, 0, 1), position.geodesicNormal).invert();
     // return new itowns.THREE.Quaternion(-1, 0, 0, 1).normalize().multiply(geodesicNormal);
     const res = new itowns.THREE.Quaternion(-1, 0, 0, 1).normalize().multiply(geodesicNormal);
-    // const res = new itowns.THREE.Quaternion(-0.6580777252094274, -0.26260415763022305, 0.26260415763022305, 0.6549899391393943);
-    // console.log(JSON.stringify(res.toJSON()));
     return res;
     // return view.camera.camera3D.quaternion.clone().normalize().invert();
 };
@@ -346,24 +344,35 @@ function switchRegisteredCoordinates() {
 // ////////////////////////////////// MODE 1
 
 function getRotationYaw(axisValue) {
-    if(axisValue === 0) {
-        return;
-    }
+    // if(axisValue === 0) {
+    //     return;
+    // }
 
-    if (!flyDirectionQuat) {
+    // if (!flyDirectionQuat) {
         // locking camera look at
         // FIXME using {view.camera.camera3D.matrixWorld} or normalized quaternion produces the same effect and shift to the up direction.
         flyDirectionQuat = view.camera.camera3D.quaternion.clone().normalize();
         console.log("fixing rotation quat", flyDirectionQuat);
+    // }
+
+    //peut etre optimize
+
+
+    if(axisValue != 0) {
+        deltaRotation += Math.PI / (160 * axisValue);
     }
-    deltaRotation += Math.PI / (160 * axisValue);
     // console.log('rotY: ', deltaRotation);
     const offsetRotation = Controllers.getGeodesicalQuaternion();
     // const offsetRotation = flyDirectionQuat.clone().invert();
     const thetaRotMatrix = new itowns.THREE.Matrix4().identity().makeRotationY(deltaRotation);
+    // const thetaRotMatrix = new itowns.THREE.Matrix4().identity().makeRotationY(Math.PI / (160 * axisValue));
     const rotationQuartenion = new itowns.THREE.Quaternion().setFromRotationMatrix(thetaRotMatrix).normalize();
-
+const test = flyDirectionQuat.clone();
     offsetRotation.premultiply(rotationQuartenion);
+    // test.premultiply(offsetRotation).premultiply(rotationQuartenion);
+
+    // rotateOnWorldAxis
+    // return test;
     return offsetRotation;
 }
 
@@ -380,26 +389,29 @@ function getTranslationElevation(axisValue, speedFactor) {
  * @returns
  */
 function cameraOnFly(ctrl) {
-    if (!flyDirectionQuat) {
+    // if (!flyDirectionQuat) {
         // locking camera look at
         // FIXME using {view.camera.camera3D.matrixWorld} or normalized quaternion produces the same effect and shift to the up direction.
         flyDirectionQuat = view.camera.camera3D.quaternion.clone().normalize();
         console.log("fixing rotation quat", flyDirectionQuat);
-    }
+    // }
     if (ctrl.gamepad.axes[2] === 0 && ctrl.gamepad.axes[3] === 0) {
         return;
     }
     let directionX = new itowns.THREE.Vector3();
-    let directionY = new itowns.THREE.Vector3();
+    let directionZ = new itowns.THREE.Vector3();
     const speedFactor = getSpeedFactor();
     const offsetRotation = Controllers.getGeodesicalQuaternion();
 
     if (ctrl.gamepad.axes[3] !== 0) {
         // flying following the locked camera look at
         const speed = ctrl.gamepad.axes[3] * speedFactor;
-        // directionY = new itowns.THREE.Vector3(0, 0, 1).multiplyScalar(speed);
-        directionY = new itowns.THREE.Vector3(0, 0, 1).applyQuaternion(flyDirectionQuat).multiplyScalar(speed);
-        // directionY = new itowns.THREE.Vector3(0, 0, 1).applyQuaternion(offsetRotation).multiplyScalar(speed);
+
+        //Attention ici c'est bien Z
+
+        // directionZ = new itowns.THREE.Vector3(0, 0, 1).multiplyScalar(speed);
+        directionZ = new itowns.THREE.Vector3(0, 0, 1).applyQuaternion(flyDirectionQuat).multiplyScalar(speed);
+        // directionZ = new itowns.THREE.Vector3(0, 0, 1).applyQuaternion(offsetRotation).multiplyScalar(speed);
 
     }
     if (ctrl.gamepad.axes[2] !== 0) {
@@ -409,20 +421,23 @@ function cameraOnFly(ctrl) {
         // directionX = new itowns.THREE.Vector3(1, 0, 0).applyQuaternion(offsetRotation).multiplyScalar(speed);
 
     }
-
+    // const directionZ = new itowns.THREE.Vector3(0, 1, 0).applyQuaternion(flyDirectionQuat);
 
     // console.log("directionX")
     // console.log(directionX)
-    // console.log("directionY")
-    // console.log(directionY)
+    // console.log("directionZ")
+    // console.log(directionZ)
     // const offsetRotation = Controllers.getGeodesicalQuaternion();
     // const offsetRotation = view.camera.camera3D.quaternion.clone().normalize().invert();
     //pb ici, perte de rotation
-    const trans = view.camera.camera3D.position.clone().add(directionX.add(directionY));
-    // clampAndApplyTransformationToXR(trans, offsetRotation);
+    // const trans = view.camera.camera3D.position.clone().add(directionX.add(directionZ.add(directionZ)));
+    const trans = view.camera.camera3D.position.clone().add(directionX.add(directionZ));
+    // const trans = view.camera.camera3D.translateX(10.0).position;
+    var rot = getRotationYaw(0)
+    clampAndApplyTransformationToXR(trans, rot);
     console.log(flyDirectionQuat.clone())
     //Bonne piste
-    clampAndApplyTransformationToXR(trans,  flyDirectionQuat.clone().invert());
+    // clampAndApplyTransformationToXR(trans,  flyDirectionQuat.clone().invert());
     console.log(flyDirectionQuat.clone())
 
 }
