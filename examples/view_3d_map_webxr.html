@@ -10,10 +10,10 @@
         <link rel="stylesheet" type="text/css" href="css/LoadingScreen.css">
         <link rel="stylesheet" type="text/css" href="css/widgets.css">
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>																
-																	  
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>
 
-																																												
+
+
     </head>
     <body>
         <div id="viewerDiv"></div>
@@ -73,7 +73,7 @@
             const scale = 1;
 
             // Create a GlobeView
-            const view = new itowns.GlobeView(viewerDiv, placement, { webXR: { scale: scale, callback: render } }); 
+            const view = new itowns.GlobeView(viewerDiv, placement, { webXR: { scale: scale, callback: render } });
 
             // Instantiate three's VR Button
             const vrButton = VRButton.createButton(view.renderer);
@@ -82,7 +82,7 @@
             // Setup loading screen and debug menu
             setupLoadingScreen(viewerDiv, view);
             var menuGlobe = new GuiTools('menuDiv', view, 300);
-            
+
             // ---------- DISPLAY ORTHO-IMAGES : ----------
 
             // Add one imagery layer to the scene. This layer's properties are
@@ -125,11 +125,11 @@
                     }
                 });
             }
-        
+
 
             // ------------- webxr interaction ----------------
             view.scene.matrixWorldAutoUpdate = true;
-            
+
             initXR();
 
             function addXRObjects() {
@@ -174,11 +174,11 @@
                 // resource URL, do not commit as is.
                 "myGLB.glb",
 
-                
+
                 // called when the resource is loaded
                 (gltf) => {
                     gltf.scene.position.copy(new itowns.THREE.Vector3(4486191.121470811, 477820.22721133975, 4495989.354518597));
-                    
+
                     gltf.scene.lookAt(new itowns.THREE.Vector3(0, 0, 0));
                     gltf.scene.rotateX(Math.PI / 2);
                     gltf.scene.rotateX(Math.PI);
@@ -187,7 +187,7 @@
                     gltf.scene.updateMatrixWorld();
                     const gltfBbox = new itowns.THREE.Box3();
                     gltfBbox.setFromObject(gltf.scene);
-                    
+
                     view.scene.add(gltf.scene);
                     const helper = new itowns.THREE.Box3Helper( gltfBbox, 0xffff00 );
                     helper.name="bboxGltfHelper";
@@ -215,14 +215,14 @@
                     });
                 }
             }
-                
+
 
             function initXR() {
                 contextXR.renderer = view.mainLoop.gfxEngine.renderer;
                 Controllers.addControllers(view, contextXR);
 
                 addXRObjects();
-                
+
                  contextXR.renderer.xr.addEventListener( 'sessionstart', function ()
                  {
 
@@ -231,22 +231,22 @@
                     });
                     contextXR.baseReferenceSpace = contextXR.renderer.xr.getReferenceSpace();
                     view.scene.children.forEach((child) => {if(child.name === 'xrHeadset') { contextXR.xrHeadSet = child;} });
-                    
+
                     var testPicking = XRUtils.showPosition('testPicking', new itowns.THREE.Vector3(4486512.584368641, 476258.50340769894, 4497781.931009745), 0xf9429e, 25, true);
                     // contextXR.interactiveLayers.push(testPicking);
                     var testPickingBbox = XRUtils.showPosition('testPickingConcrete', new itowns.THREE.Vector3(4486480, 476250, 4497781.931009745), 0x000000, 25, true);
                     XRUtils.generateVRBox(testPickingBbox);
                     // contextXR.interactiveLayers.push(testPickingBbox);
-                    contextXR.interactiveLayers = contextXR.interactiveLayers.concat(view.tileLayer.level0Nodes); 
+                    contextXR.interactiveLayers = contextXR.interactiveLayers.concat(view.tileLayer.level0Nodes);
 
                    // const orbitControls = new itowns.THREE.OrbitControls( view.controls.camera, contextXR.renderer.domElement );
                    // orbitControls.target = gltf.centor vector
                  });
             }
-        
+
             /**
              *  try to performs terrain intersection by pixel reading from a camera set onto controller coordinates.
-             *  FIXME Needs fixes for terrain intersection. 
+             *  FIXME Needs fixes for terrain intersection.
              *  Distances got in return doesn't allow to know if we reached the far distance without intersecting nothing
              *  Distances got from an intersection is wrong.
              */
@@ -271,7 +271,7 @@
                 contextXR.cameraRightGrp.camera.lookAt(contextXR.cameraRightGrp.camera.position.clone().add(contextXR.raycaster.ray.direction));
                 contextXR.cameraRightGrp.camera.updateProjectionMatrix();
                 contextXR.cameraRightGrp.cameraHelper.update();
-                // pick terrain coordinate from controller camera 
+                // pick terrain coordinate from controller camera
                 var pickedValueRightCamera = new itowns.THREE.Vector3();
                 // view.getPickingPositionFromDepth(null, pickedValueRightCamera, contextXR.cameraRightGrp.camera);
                 view.getPickingPositionFromDepth(null, pickedValueRightCamera);
@@ -290,12 +290,12 @@
                   //  XRUtils.addPositionPoints('terrainPickAccurate', pickedValueRightCamera, 0xb51800,30, true);
                 }
                 */
-                
+
                // var pickedValueRightCamera = itowns.CameraUtils.getTransformCameraLookingAtTarget(view, contextXR.cameraRightGrp.camera).coord;
 
                 // XRUtils.addPositionPoints('terrainPickAccurate', pickedValueRightCamera, 0xb518c7,30, true);
                 // console.log(pickedValue, pickedValueRightCamera);
-                
+
 
                var coordOnterrain = new itowns.Coordinates(view.controls.getCameraCoordinate().crs, pickedValueRightCamera.x,pickedValueRightCamera.y,pickedValueRightCamera.z);
                // XRUtils.showPositionVerticalLine('better_terrain_intersectt', pickedValueRightCamera, 0xb518c7, 1000, true);
@@ -316,7 +316,7 @@
                 }
                 if (!contextXR.controller2.userData.lockedTeleportPosition) {
                     contextXR.INTERSECTION = undefined;
-                    const intersects = intersectInteractiveLayers(); 
+                    const intersects = intersectInteractiveLayers();
                     if (intersects && intersects.length > 0 ) {
                         XRUtils.updateBboxVisibility(intersects[0].object);
                         updateIntersectionMarker(intersects[0]);
@@ -368,7 +368,44 @@
                     if(view.meshPointer){
                         view.meshPointer.visible = false;
                     }
-                    
+
+                    const previousPos = new itowns.THREE.Mesh(
+                        new itowns.THREE.SphereGeometry(50, 16, 8),
+                        new itowns.THREE.MeshBasicMaterial({ color: 0x0000ff, wireframe: true }),
+                    );
+                    previousPos.name = "pt";
+                    previousPos.position.copy(intersectionVector);
+                    XRUtils.addToScene(previousPos, false);
+                    // centerNode.copy(selectNode.boundingSphere.center).applyMatrix4(selectNode.matrixWorld);
+                    // const project = centerNode.project(view.camera3D);
+                    // const coords = view.normalizedToViewCoords(project);
+                    // const size = selectNode.screenSize;
+                    //
+                    // //
+                    // const coneCenter = new itowns.THREE.Vector3(0, 0, 0)
+                    //     .applyMatrix4(view.mesh.matrixWorld);
+
+                    const coneCenter =intersectionVector;
+
+                    const viewMatrix = new itowns.THREE.Matrix4().multiplyMatrices(view.camera3D.projectionMatrix, view.camera3D.matrixWorldInverse);
+
+                    coneCenter.applyMatrix4(viewMatrix);
+                    const mouse = view.normalizedToViewCoords(coneCenter);
+
+                    // So read the depth buffer at cone's position
+                    // const valueVisible = view.readDepthBuffer(mouse.x, mouse.y, 1, 1);
+
+
+                    var pick = view.pickObjectsAt(mouse, 5, contextXR.pointLayer);
+
+                    for (const p of pick) {
+                        console.info('Selected point #' + p.index + ' in position (' +
+                            p.object.position.x + ', ' +
+                            p.object.position.y + ', ' +
+                            p.object.position.z +
+                            ') in Points ' + p.object.layer.id);
+                    }
+
                     XRUtils.showPosition('pointsIntersections', intersectionVector, 0xfeff00, view.camera.camera3D.position.distanceTo(intersectionVector) / 100, false);
                 }
                 else {
@@ -382,11 +419,11 @@
                         view.meshPointer.position.copy(coordIntersectedMappedOnLayer.coord.as(view.referenceCrs));
                     }
                 }
-                
+
             }
 
             function getJumpCoordinate(intersectionCoord) {
-                // not a {itowns.Coordinates} 
+                // not a {itowns.Coordinates}
                 var coordOnCamera = itowns.DEMUtils.getTerrainObjectAt(view.tileLayer, intersectionCoord, itowns.DEMUtils.PRECISE_READ_Z);
                 var coordIntersectItowns = coordOnCamera.coord.clone().as('EPSG:4326');
                 // update jump target altitude.
@@ -401,7 +438,7 @@
                      coordOnCamera.coord.altitude += cameraCoordOnTerrain.coord.z;
                      contextXR.deltaAltitude = cameraCoordOnTerrain.coord.z;
                 }
-                
+
                 // must clone Coordinate to avoid side effect, maybe with DEMUtils, but not sure.
                 contextXR.coordOnCamera = new itowns.Coordinates(coordOnCamera.coord.crs);
                 contextXR.coordOnCamera.setFromVector3(coordOnCamera.coord);
@@ -452,8 +489,8 @@
                addMeshToScene();
             });
 
-            
-            
+
+
 
             // Add the UI Debug
             var d = new debug.Debug(view, menuGlobe.gui);
