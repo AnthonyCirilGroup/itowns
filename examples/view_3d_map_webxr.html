@@ -369,13 +369,6 @@
                         view.meshPointer.visible = false;
                     }
 
-                    const previousPos = new itowns.THREE.Mesh(
-                        new itowns.THREE.SphereGeometry(50, 16, 8),
-                        new itowns.THREE.MeshBasicMaterial({ color: 0x0000ff, wireframe: true }),
-                    );
-                    previousPos.name = "pt";
-                    previousPos.position.copy(intersectionVector);
-                    XRUtils.addToScene(previousPos, false);
                     // centerNode.copy(selectNode.boundingSphere.center).applyMatrix4(selectNode.matrixWorld);
                     // const project = centerNode.project(view.camera3D);
                     // const coords = view.normalizedToViewCoords(project);
@@ -385,7 +378,7 @@
                     // const coneCenter = new itowns.THREE.Vector3(0, 0, 0)
                     //     .applyMatrix4(view.mesh.matrixWorld);
 
-                    const coneCenter =intersectionVector;
+                    const coneCenter = intersectionVector;
 
                     const viewMatrix = new itowns.THREE.Matrix4().multiplyMatrices(view.camera3D.projectionMatrix, view.camera3D.matrixWorldInverse);
 
@@ -396,17 +389,36 @@
                     // const valueVisible = view.readDepthBuffer(mouse.x, mouse.y, 1, 1);
 
 
-                    var pick = view.pickObjectsAt(mouse, 5, contextXR.pointLayer);
+                    var pick = view.pickObjectsAt(mouse, 1, contextXR.pointLayer);
 
+                    var lastP = null;
                     for (const p of pick) {
+
                         console.info('Selected point #' + p.index + ' in position (' +
                             p.object.position.x + ', ' +
                             p.object.position.y + ', ' +
                             p.object.position.z +
-                            ') in Points ' + p.object.layer.id);
+                            ') in Points ' + p.object.layer.id
+                            +
+                            p + ', ' );
+                        console.log(p)
+                        lastP = p.point.copy();
                     }
 
-                    XRUtils.showPosition('pointsIntersections', intersectionVector, 0xfeff00, view.camera.camera3D.position.distanceTo(intersectionVector) / 100, false);
+                    if(lastP) {
+                        const previousPos = new itowns.THREE.Mesh(
+                            new itowns.THREE.SphereGeometry(50, 16, 8),
+                            new itowns.THREE.MeshBasicMaterial({
+                                color: 0x0000ff,
+                                wireframe: true
+                            }),
+                        );
+                        previousPos.name = "pt";
+                        previousPos.position.copy(lastP);
+                        XRUtils.addToScene(previousPos, false);
+                    }
+
+                    // XRUtils.showPosition('pointsIntersections', intersectionVector, 0xfeff00, view.camera.camera3D.position.distanceTo(intersectionVector) / 100, false);
                 }
                 else {
                     XRUtils.removeReference('pointsIntersections');
