@@ -310,6 +310,8 @@
             }
 
             function render() {
+                return;
+
                 if(!contextXR.controller2.userData.isSelecting) {
                     // if not selecting reset previous state
                     contextXR.INTERSECTION = undefined;
@@ -391,8 +393,10 @@
 
                     var pick = view.pickObjectsAt(mouse, 1, contextXR.pointLayer);
 
-                    var lastP = null;
+                    var firstP = new itowns.THREE.Vector3();
+                    var first = true;
                     for (const p of pick) {
+
 
                         console.info('Selected point #' + p.index + ' in position (' +
                             p.object.position.x + ', ' +
@@ -402,10 +406,13 @@
                             +
                             p + ', ' );
                         console.log(p)
-                        lastP = p.point.copy();
+                        if(first) {
+                            firstP.copy(p.point);
+                            first = false;
+                        }
                     }
 
-                    if(lastP) {
+                    if(firstP) {
                         const previousPos = new itowns.THREE.Mesh(
                             new itowns.THREE.SphereGeometry(50, 16, 8),
                             new itowns.THREE.MeshBasicMaterial({
@@ -414,7 +421,7 @@
                             }),
                         );
                         previousPos.name = "pt";
-                        previousPos.position.copy(lastP);
+                        previousPos.position.copy(firstP);
                         XRUtils.addToScene(previousPos, false);
                     }
 
