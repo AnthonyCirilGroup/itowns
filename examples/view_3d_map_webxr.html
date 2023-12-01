@@ -310,7 +310,6 @@
             }
 
             function render() {
-                return;
 
                 if(!contextXR.controller2.userData.isSelecting) {
                     // if not selecting reset previous state
@@ -379,7 +378,7 @@
                     // //
                     // const coneCenter = new itowns.THREE.Vector3(0, 0, 0)
                     //     .applyMatrix4(view.mesh.matrixWorld);
-
+                    if( contextXR.click) {
                     const coneCenter = intersectionVector;
 
                     const viewMatrix = new itowns.THREE.Matrix4().multiplyMatrices(view.camera3D.projectionMatrix, view.camera3D.matrixWorldInverse);
@@ -398,14 +397,14 @@
                     for (const p of pick) {
 
 
-                        console.info('Selected point #' + p.index + ' in position (' +
-                            p.object.position.x + ', ' +
-                            p.object.position.y + ', ' +
-                            p.object.position.z +
-                            ') in Points ' + p.object.layer.id
-                            +
-                            p + ', ' );
-                        console.log(p)
+                        // console.info('Selected point #' + p.index + ' in position (' +
+                        //     p.object.position.x + ', ' +
+                        //     p.object.position.y + ', ' +
+                        //     p.object.position.z +
+                        //     ') in Points ' + p.object.layer.id
+                        //     +
+                        //     p + ', ' );
+                        // console.log(p)
                         if(first) {
                             firstP.copy(p.point);
                             first = false;
@@ -413,22 +412,27 @@
                     }
 
                     if(firstP) {
-                        const previousPos = new itowns.THREE.Mesh(
-                            new itowns.THREE.SphereGeometry(50, 16, 8),
-                            new itowns.THREE.MeshBasicMaterial({
-                                color: 0x0000ff,
-                                wireframe: true
-                            }),
-                        );
-                        previousPos.name = "pt";
-                        previousPos.position.copy(firstP);
-                        XRUtils.addToScene(previousPos, false);
+                        // const previousPos = new itowns.THREE.Mesh(
+                        //     new itowns.THREE.SphereGeometry(50, 16, 8),
+                        //     new itowns.THREE.MeshBasicMaterial({
+                        //         color: 0x0000ff,
+                        //         wireframe: true
+                        //     }),
+                        // );
+                        // previousPos.name = "pt";
+                        // previousPos.position.copy(firstP);
+                        // XRUtils.addToScene(previousPos, false);
+
+
+                            XRUtils.showPosition('pointsIntersections', firstP, 0xfeff00, 10, false);
+                        }
+
                     }
 
                     // XRUtils.showPosition('pointsIntersections', intersectionVector, 0xfeff00, view.camera.camera3D.position.distanceTo(intersectionVector) / 100, false);
                 }
                 else {
-                    XRUtils.removeReference('pointsIntersections');
+                    // XRUtils.removeReference('pointsIntersections');
                     // update marker on terrain position
                     var intersectPosition = new itowns.Coordinates(view.referenceCrs);
                     intersectPosition.setFromVector3(intersectionVector);
