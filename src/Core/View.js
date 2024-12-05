@@ -194,6 +194,7 @@ class View extends THREE.EventDispatcher {
             this.scene.matrixWorldAutoUpdate = false;
         }
 
+
         this.camera = new Camera(
             this.referenceCrs,
             this.mainLoop.gfxEngine.getWindowSize().x,

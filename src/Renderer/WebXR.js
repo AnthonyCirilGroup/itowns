@@ -30,7 +30,7 @@ const initializeWebXR = (view, options) => {
         view.scene.scale.multiplyScalar(scale);
         view.scene.updateMatrixWorld();
         xr.enabled = true;
-        xr.getReferenceSpace('local');
+        xr.getReferenceSpace('local');  // WTF ?
 
         const position = view.camera.position();
         const geodesicNormal = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), position.geodesicNormal).invert();
@@ -45,13 +45,21 @@ const initializeWebXR = (view, options) => {
 
         view.camera.camera3D = xr.getCamera();
         view.camera.resize(view.camera.width, view.camera.height);
-
         document.addEventListener('keydown', exitXRSession, false);
 
         // TODO Fix asynchronization between xr and MainLoop render loops.
         // (see MainLoop#scheduleViewUpdate).
         xr.setAnimationLoop((timestamp) => {
             if (xr.isPresenting && view.camera.camera3D.cameras[0]) {
+                // Need to set the matrixWorldAutoUpdate to true to force the update
+                // https://github.com/mrdoob/three.js/pull/28533#issuecomment-2451950811
+                const prevMatrixWorldAutoUpdate = view.scene.matrixWorldAutoUpdate;
+                view.scene.matrixWorldAutoUpdate = true;
+                view.scene.updateMatrix();
+                view.scene.updateMatrixWorld();
+                view.scene.matrixWorldAutoUpdate = prevMatrixWorldAutoUpdate;
+
+
                 view.camera.camera3D.updateMatrix();
                 view.camera.camera3D.updateMatrixWorld(true);
                 view.notifyChange(view.camera.camera3D, true);
