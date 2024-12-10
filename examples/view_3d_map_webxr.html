@@ -29,19 +29,25 @@
             // ---------- SETUP THE VR VIEW : ----------
 
             // Define camera initial position
+            const tile3DCoordinates = new itowns.Coordinates('EPSG:4978', 4413284.5, -18949.275390625, 4589538.5); // 4412106.042879028, -26370.61912189091, 4590341.467693916);
+
+            // ---------- SETUP THE VR VIEW : ----------
+
+            // Define camera initial position
             const placement = {
-                coord: new itowns.Coordinates('EPSG:4326', 6.227, 45.167),
-                range: 15000,
+                coord: tile3DCoordinates,
+                range: 1000,
                 tilt: 5,
-                heading: 62,
-            }
+                heading: 110,
+
+            };
 
             // `viewerDiv` will contain iTowns' rendering area (`<canvas>`)
             const viewerDiv = document.getElementById('viewerDiv');
 
             // Create a GlobeView
             const view = new itowns.GlobeView(viewerDiv, placement, {
-                webXR: { scale: 0.005 },
+                webXR: { scale: 1 },
             });
 
             // Instantiate three's VR Button
@@ -69,6 +75,20 @@
                     new itowns.ElevationLayer(config.id, config),
                 );
             }
+
+
+
+            // ------------- webxr interaction ----------------
+            view.scene.matrixWorldAutoUpdate = true;
+            const source = new itowns.OGC3DTilesSource({ url: "https://10.1.23.22/3dtiles/demo_point_cloud/tileset.json" });
+            const layer = new itowns.OGC3DTilesLayer('3DTiles', {
+                source,
+
+            },);
+
+            view.addLayer(
+                layer
+            );
             itowns.Fetcher.json('./layers/JSONLayers/IGN_MNT_HIGHRES.json')
                 .then(addElevationLayerFromConfig);
             itowns.Fetcher.json('./layers/JSONLayers/WORLD_DTM.json')
